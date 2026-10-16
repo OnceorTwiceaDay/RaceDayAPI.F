@@ -61,6 +61,19 @@ app.UseCors("AllowAll");
 app.UseSession();
 app.MapControllers();
 
+// Helpful root endpoint so navigating to the application's base URL in a
+// browser shows something useful. In Development redirect to Swagger UI,
+// otherwise return a simple text response.
+app.MapGet("/", (HttpContext http) =>
+{
+    if (app.Environment.IsDevelopment())
+    {
+        return Results.Redirect("/swagger");
+    }
+
+    return Results.Text("RaceDay API is running. Use /swagger for API docs.");
+});
+
 app.Run();
 
 // Exposed so RaceDay.Api.Tests can spin the API up in-memory via
