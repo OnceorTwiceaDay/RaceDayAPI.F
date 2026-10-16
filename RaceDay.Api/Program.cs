@@ -12,7 +12,7 @@ builder.Services.AddDbContext<RaceDayDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Session-based authentication support (Part 2 requires sessions, not JWT -
-// see the Part 1 endpoint plan revision note).
+
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
 {

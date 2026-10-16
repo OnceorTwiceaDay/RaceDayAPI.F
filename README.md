@@ -1,8 +1,7 @@
 # RaceDay Event Management System — Part 2
 
-**Module:** PROG6212 — Programming 2B  
+**Module:** PROG6212 — 
 **Project:** RaceDay Event Management System  
-**Repository:** `prog6212-part-2-Bongnai`
 
 ## 1. About the Project
 
