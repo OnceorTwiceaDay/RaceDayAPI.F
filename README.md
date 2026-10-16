@@ -1,73 +1,79 @@
-# prog6212-part-2-Kanya-12
+# RaceDay Event Management System — Part 2
 
-# RaceDay Event Management System Part2
+**Module:** PROG6212 — Programming 2B  
+**Project:** RaceDay Event Management System  
+**Repository:** `prog6212-part-2-Bongnai`
 
-1. *Project Description:*
+## 1. About the Project
 
-- RaceDay is a full-stack event management system for the South African road running, walking, and cycling community. Event organisers create and manage events, categories, routes, and results, while participants browse events, enrol in categories, and track their own performance history.
+RaceDay is a web-based event management application developed for South Africa's road running, walking, and cycling community. It provides a central platform where event organisers can manage sporting events and participants can discover events, register for activities, and review their results.
 
-This repository contains the Part 2 implementation for PROG6212 (Programming 2B), including the ASP.NET Core Web API, EF Core model, Swagger API, unit tests, and CI/CD workflow. The Part 1 planning documents remain in the /docs folder and are still the specification for the project foundation.
+The application allows organisers to create and maintain events, configure participation categories, manage routes, oversee enrolments, and record finishing positions and times. Participants can browse available events, select a category, manage their enrolments, and access their personal performance records.
 
-2. *User Roles*
+This repository contains the Part 2 implementation for PROG6212. The solution includes an ASP.NET Core Web API, Entity Framework Core data models, Swagger documentation, automated unit tests, and a GitHub Actions CI/CD workflow.
 
-A) *Organiser:*
+The planning documents completed for Part 1 are retained in the `docs` directory and continue to provide the original project specifications.
 
-- Registers and logs in as an organiser.
-- Creates, edits, and deletes their own events.
-- Manages categories and routes for their own events.
-- Views all enrolments for their own events and can change an enrolment status.
-- Captures and corrects finish times and finishing positions for their own events.
-- Cannot enrol in events or edit another organiser's events.
+## 2. Application Users and Permissions
 
-B) *Participant:*
+RaceDay supports two primary user roles. Each role has specific permissions to ensure users can access the functionality relevant to their responsibilities.
 
-- Registers and logs in as a participant.
-- Browses events, categories, and routes.
-- Enrols in an event by choosing a category.
-- Views and cancels their own enrolments.
-- Views their own results and performance history.
-- Cannot create, edit, or delete events, categories, routes, or results.
+### 2.1 Event Organiser
 
-Both roles can view and update their own profile.
+Organisers are responsible for creating and administering sporting events.
 
-3. *Part 1 Deliverables*
+Their available functions include:
 
+- Creating an account and signing in with the Organiser role.
+- Creating, updating, and deleting events they own.
+- Adding and maintaining event categories and routes.
+- Viewing enrolments associated with their events.
+- Updating enrolment statuses.
+- Recording finishing times and positions for participants.
+- Correcting previously recorded results.
 
-## Part 1 Deliverables
+Organisers cannot enrol as participants or modify events belonging to other organisers. Ownership checks are applied to the relevant operations.
 
-| Deliverable | File |
+### 2.2 Participant
+
+Participants use RaceDay to find events and manage their involvement.
+
+Their available functions include:
+
+- Registering and signing in as a Participant.
+- Viewing available events, categories, and routes.
+- Enrolling in an event by selecting a suitable category.
+- Viewing their own enrolments and cancelling them when necessary.
+- Viewing their results and personal performance history.
+
+Participants are not permitted to create, modify, or delete events, categories, routes, or results.
+
+### 2.3 Profile Management
+
+Both Organisers and Participants can view and update their own profile information.
+
+## 3. Technologies and Development Tools
+
+The application uses the following technologies and frameworks:
+
+| Technology | Purpose |
 |---|---|
-| Entity Relationship Diagram | [RaceDay_ERD.pdf](https://github.com/RCNMBCampus/prog6212-part-1-Kanya-12/blob/ce7c92df92390fc9564417d4c0ef1fcf9eb84456/docs/RaceDay_ERD.pdf) |
-| API Endpoint Plan | [RaceDay_API_Endpoint_Plan.pdf](https://github.com/RCNMBCampus/prog6212-part-1-Kanya-12/blob/ce7c92df92390fc9564417d4c0ef1fcf9eb84456/docs/RaceDay_API_Endpoint_Plan.pdf) |
-| SQL Database Script | [RaceDay_Database.sql](https://github.com/RCNMBCampus/prog6212-part-1-Kanya-12/blob/ce7c92df92390fc9564417d4c0ef1fcf9eb84456/docs/RaceDay_Database.sql) |
+| ASP.NET Core 8 Web API | Provides the application's HTTP API and server-side functionality. |
+| C# | Implements application logic, controllers, and data models. |
+| Visual Studio 2022 | Development and debugging environment. |
+| Entity Framework Core 8 | Handles database access using the Code-First approach. |
+| SQL Server | Stores application data. |
+| ASP.NET Core Session | Maintains authenticated user sessions. |
+| ASP.NET Core PasswordHasher | Hashes passwords before they are stored. |
+| Swashbuckle / Swagger UI | Documents and allows interactive testing of API endpoints. |
+| xUnit | Runs automated unit and integration-style tests. |
+| Microsoft.AspNetCore.Mvc.Testing | Hosts the API in a test environment. |
+| EF Core In-Memory Provider | Provides a temporary database for automated tests. |
+| GitHub Actions | Automates building and testing through CI/CD workflows. |
 
-The database has six entities: User, Event, Category, Route, Enrolment, and Result. Enrolment is the associative entity resolving the many-to-many relationship between Participants and Events via a chosen Category. Result has a 1:0..1 relationship with Enrolment because a result only exists once the organiser captures it.
+## 4. Solution Structure
 
-The Part 1 workflow (.github/workflows/part1-ci.yml) checks that the /docs folder and required files exist.
-
-## Part 1 CI screenshot:
-
-<img width="813" height="54" alt="image" src="https://github.com/user-attachments/assets/06b55ae6-450c-409b-bdab-0b66e0aae5cb" />
-
-## Successful build screenshot:
-
-<img width="898" height="54" alt="image" src="https://github.com/user-attachments/assets/dcaeff56-6205-4a48-85fe-27f0fff2af01" />
-
-## Part 1 video (unlisted):
-- https://youtu.be/DlgdIhYUSgA
-
-## Part 2
-
-*Technologies Used:*
-- ASP.NET Core 8 Web API (C#), built with Visual Studio 2022
-- Entity Framework Core 8, Code-First, with SQL Server
-- Server-side sessions for authentication (AddSession)
-- ASP.NET Core PasswordHasher for password hashing
-- Swashbuckle (Swagger UI) with XML documentation comments
-- xUnit, Microsoft.AspNetCore.Mvc.Testing and the EF Core in-memory provider for tests
-- GitHub Actions for CI/CD
-
-## Project Structure
+The repository is organised into separate projects and folders to keep the API, shared data-transfer objects, automated tests, and planning documents easy to maintain.
 
 ```text
 RaceDay/
@@ -77,8 +83,8 @@ RaceDay/
 │   ├── Controllers/              # Auth, Profile, Events, Categories,
 │   │                             # Routes, Enrolments, Results
 │   ├── Data/                     # RaceDayDbContext
-│   ├── Filters/                  # RequireRoleAttribute (role enforcement)
-│   ├── Migrations/               # Entity Framework Core migrations
+│   ├── Filters/                  # RequireRoleAttribute
+│   ├── Migrations/               # EF Core database migrations
 │   ├── Models/                   # AppUser, Event, Category, RaceRoute,
 │   │                             # Enrolment, Result, Role
 │   ├── Properties/
@@ -87,7 +93,7 @@ RaceDay/
 │   └── Program.cs
 ├── RaceDay.Contracts/            # Shared request and response DTOs
 │   └── Dtos.cs
-├── RaceDay.Api.Tests/            # xUnit automated tests
+├── RaceDay.Api.Tests/            # Automated xUnit tests
 ├── .github/
 │   └── workflows/
 │       ├── part1-ci.yml
@@ -95,128 +101,249 @@ RaceDay/
 └── README.md
 ```
 
-## Database Setup:
-1. You need a SQL Server instance. LocalDB is installed with Visual Studio; SQL Server Express also works.
-2. Open RaceDay.Api/appsettings.json and set the Server value in DefaultConnection to your own instance. It must keep the doubled backslash inside the JSON file.
-3. Create the database from the committed migrations using Visual Studio or the terminal with `dotnet ef database update --project RaceDay.Api`.
-4. Open SQL Server Management Studio and expand RaceDayDb → Tables to confirm the Users, Events, Categories, Routes, Enrolments, Results, and __EFMigrationsHistory tables exist.
+## 5. Database Configuration
 
-The API does not seed any data. Register accounts through Swagger as described below.
+RaceDay uses SQL Server with Entity Framework Core migrations to create and update the Part 2 database.
 
-The docs/RaceDay_Database.sql script from Part 1 creates a separate database called RaceDay; the Part 2 database is RaceDayDb and is generated from EF Core migrations.
+### Prerequisites
 
-## How to Run the API
+Before running the application, ensure that you have:
 
-*Visual Studio:*
-1. Open RaceDay.sln.
-2. Right-click RaceDay.Api → Set as Startup Project.
-3. Choose the https profile and press F5.
-4. Swagger opens at https://localhost:7236/swagger.
+- Visual Studio 2022 or a suitable .NET development environment.
+- The .NET 8 SDK.
+- SQL Server LocalDB, SQL Server Express, or another compatible SQL Server instance.
+- Access to the repository and its solution file.
 
-Terminal:
+### Configuration steps
+
+1. Open `RaceDay.Api/appsettings.json`.
+2. Locate the `DefaultConnection` connection string.
+3. Change the server name to match your installed SQL Server instance. Preserve the escaped backslashes required by JSON when using a Windows instance name.
+4. Open a terminal in the solution directory.
+5. Apply the committed Entity Framework Core migrations by running:
+
+   ```bash
+   dotnet ef database update --project RaceDay.Api
+   ```
+
+6. Open SQL Server Management Studio and connect to the configured SQL Server instance.
+7. Expand the `RaceDayDb` database and inspect its tables.
+
+The database should contain the following application tables:
+
+- `Users`
+- `Events`
+- `Categories`
+- `Routes`
+- `Enrolments`
+- `Results`
+- `__EFMigrationsHistory`
+
+**Important database distinction:** The SQL script from Part 1, `docs/RaceDay_Database.sql`, creates a separate database named `RaceDay`. The Part 2 API uses `RaceDayDb`, which is created and maintained through Entity Framework Core migrations. These are separate database setup approaches.
+
+The application does not automatically insert sample records. Create user accounts through the registration endpoint in Swagger before testing authenticated functionality.
+
+## 6. Starting the Application
+
+### Option A: Run through Visual Studio
+
+1. Open `RaceDay.sln` in Visual Studio 2022.
+2. In Solution Explorer, right-click `RaceDay.Api`.
+3. Select **Set as Startup Project**.
+4. Select the HTTPS launch profile.
+5. Press **F5** to build and run the application.
+6. Open the Swagger interface at:
+
+   [https://localhost:7236/swagger](https://localhost:7236/swagger)
+
+### Option B: Run through the terminal
+
+From the directory containing the solution, execute:
 
 ```bash
 dotnet run --project RaceDay.Api --launch-profile https
 ```
 
-Then browse to https://localhost:7236/swagger.
+Once the API starts, access Swagger at:
 
-*Authentication*
+[https://localhost:7236/swagger](https://localhost:7236/swagger)
 
-- Register (POST /api/auth/register) validates the request, checks the role is Organiser or Participant, rejects duplicate email addresses with 409, hashes the password, and saves the user.
-- Login (POST /api/auth/login) verifies the password against the stored hash and starts a server-side session.
-- Logout (POST /api/auth/logout) clears the session.
-- Role enforcement is done by RequireRoleAttribute and returns 401 or 403 as needed.
-- Ownership checks ensure organisers and participants only access the records they own.
-- Sessions are held in server memory, so restarting the API logs everyone out.
+The displayed port may differ if the HTTPS launch profile has been configured differently.
 
-*API Endpoint Reference*
+## 7. Authentication and Access Control
 
-| Method | Route | Role | Purpose |
+RaceDay uses session-based authentication to manage access to protected API operations.
+
+### Account registration
+
+`POST /api/auth/register`
+
+The registration process validates the submitted information, accepts the Organiser or Participant role, checks for duplicate email addresses, hashes the password, and saves the new account. A duplicate email address results in an HTTP `409 Conflict` response.
+
+### User login
+
+`POST /api/auth/login`
+
+The login operation checks the submitted credentials against the stored password hash. If authentication succeeds, the API starts a server-side session.
+
+### User logout
+
+`POST /api/auth/logout`
+
+This endpoint clears the active session and signs the user out.
+
+### Role and ownership validation
+
+The `RequireRoleAttribute` filter protects endpoints that require a particular role. Requests without valid authentication or sufficient permissions receive the appropriate HTTP `401 Unauthorized` or `403 Forbidden` response.
+
+Additional ownership checks prevent users from modifying records belonging to other users. For example, an organiser may only manage their own events, while a participant may only cancel their own enrolments.
+
+**Session limitation:** Sessions are maintained in server memory. Restarting the API clears the active sessions, requiring users to sign in again.
+
+## 8. API Endpoint Guide
+
+The following table summarises the application's 26 API endpoints, including their HTTP methods, access requirements, and intended functions.
+
+| Method | Endpoint | Access | Function |
 |---|---|---|---|
-| POST | `/api/auth/register` | None | Create an Organiser or Participant account |
-| POST | `/api/auth/login` | None | Verify credentials and start a session |
-| POST | `/api/auth/logout` | Any | Clear the session |
-| GET | `/api/users/me` | Any | View own profile |
-| PUT | `/api/users/me` | Any | Update own profile |
-| GET | `/api/events` | None | List all events |
-| GET | `/api/events/{id}` | None | View one event |
-| GET | `/api/events/mine` | Organiser | List the organiser's own events |
-| POST | `/api/events` | Organiser | Create an event |
-| PUT | `/api/events/{id}` | Organiser (owner) | Update an event |
-| DELETE | `/api/events/{id}` | Organiser (owner) | Delete an event |
-| GET | `/api/events/{eventId}/routes` | None | List an event's routes |
-| POST | `/api/events/{eventId}/routes` | Organiser (owner) | Add a route to an event |
-| GET | `/api/events/{eventId}/categories` | None | List an event's categories |
-| POST | `/api/events/{eventId}/categories` | Organiser (owner) | Add a category to an event |
-| PUT | `/api/categories/{id}` | Organiser (owner) | Update a category |
-| DELETE | `/api/categories/{id}` | Organiser (owner) | Delete a category |
-| POST | `/api/events/{eventId}/enrolments` | Participant | Enrol in an event under a category |
-| GET | `/api/users/me/enrolments` | Participant | View own enrolments |
-| GET | `/api/events/{eventId}/enrolments` | Organiser (owner) | View all enrolments for an event |
-| PUT | `/api/enrolments/{id}/status` | Organiser (owner) | Set an enrolment to Pending, Confirmed, or Cancelled |
-| DELETE | `/api/enrolments/{id}` | Participant (owner) | Cancel own enrolment |
-| POST | `/api/enrolments/{enrolmentId}/result` | Organiser (owner) | Capture a finish time and position |
-| PUT | `/api/results/{id}` | Organiser (owner) | Correct a captured result |
-| GET | `/api/events/{eventId}/results` | None | View an event's results |
-| GET | `/api/users/me/results` | Participant | View own results |
+| POST | `/api/auth/register` | Public | Register an Organiser or Participant. |
+| POST | `/api/auth/login` | Public | Validate credentials and start a session. |
+| POST | `/api/auth/logout` | Authenticated | End the current session. |
+| GET | `/api/users/me` | Authenticated | Retrieve the current user's profile. |
+| PUT | `/api/users/me` | Authenticated | Update the current user's profile. |
+| GET | `/api/events` | Public | Retrieve all available events. |
+| GET | `/api/events/{id}` | Public | Retrieve a particular event. |
+| GET | `/api/events/mine` | Organiser | List events owned by the signed-in organiser. |
+| POST | `/api/events` | Organiser | Create a new event. |
+| PUT | `/api/events/{id}` | Event owner | Update an existing event. |
+| DELETE | `/api/events/{id}` | Event owner | Delete an owned event. |
+| GET | `/api/events/{eventId}/routes` | Public | List routes belonging to an event. |
+| POST | `/api/events/{eventId}/routes` | Event owner | Add a route to an owned event. |
+| GET | `/api/events/{eventId}/categories` | Public | List categories for an event. |
+| POST | `/api/events/{eventId}/categories` | Event owner | Add a category to an owned event. |
+| PUT | `/api/categories/{id}` | Category's event owner | Update a category. |
+| DELETE | `/api/categories/{id}` | Category's event owner | Delete a category. |
+| POST | `/api/events/{eventId}/enrolments` | Participant | Enrol in a category for an event. |
+| GET | `/api/users/me/enrolments` | Participant | View the participant's own enrolments. |
+| GET | `/api/events/{eventId}/enrolments` | Event owner | View enrolments for an owned event. |
+| PUT | `/api/enrolments/{id}/status` | Event owner | Change an enrolment to Pending, Confirmed, or Cancelled. |
+| DELETE | `/api/enrolments/{id}` | Enrolment owner | Cancel the participant's own enrolment. |
+| POST | `/api/enrolments/{enrolmentId}/result` | Event owner | Record a finishing time and position. |
+| PUT | `/api/results/{id}` | Event owner | Correct a recorded result. |
+| GET | `/api/events/{eventId}/results` | Public | View results for an event. |
+| GET | `/api/users/me/results` | Participant | View the participant's own results. |
 
-That is 26 endpoints: the 24 in the Part 1 plan plus the two added in Part 2.
+The API includes 26 endpoints in total: the 24 described in the original Part 1 plan and two additional endpoints introduced during Part 2 development.
 
-*Part 2 Changes and Improvements*
+## 9. Changes Introduced in Part 2
 
-| Change | Reason |
+Several implementation decisions were made to align the application with the Part 2 requirements and improve its functionality.
+
+| Change | Explanation |
 |---|---|
-| Login creates a session instead of returning a JWT | Part 2 requires session-based authentication. |
-| Added POST /api/auth/logout | Required to clear a session. |
-| Added DistanceKM to Event | Every event must capture distance. |
-| Added GET /api/events/mine | Allows organisers to see only their own events. |
-| Added PUT /api/enrolments/{id}/status | Allows organisers to confirm or cancel an entrant. |
-| AppUser and Users table instead of User | USER is a reserved word in T-SQL. |
-| RaceRoute class (table still called Routes) | Avoids a naming clash with ASP.NET Core routing. |
-| Role is a C# enum stored as text in Users.Role | Provides type safety while matching the SQL script. |
+| Session-based login | Authentication now creates a server-side session instead of returning a JWT. |
+| Logout endpoint | `POST /api/auth/logout` was added to clear the current session. |
+| Event distance | A `DistanceKM` property was added to the Event model so event distances can be recorded. |
+| Organiser event listing | `GET /api/events/mine` allows organisers to retrieve their own events. |
+| Enrolment status management | `PUT /api/enrolments/{id}/status` allows organisers to update an entrant's status. |
+| `AppUser` model and `Users` table | The application uses `AppUser` as its C# model name and `Users` as its table name to avoid conflicts associated with the SQL Server `USER` keyword. |
+| `RaceRoute` model | The C# class is named `RaceRoute`, while the database table remains `Routes`, avoiding confusion with ASP.NET Core routing concepts. |
+| Role enumeration | The Role is represented by a C# enum and stored as text in `Users.Role`, providing type safety while maintaining compatibility with the SQL script. |
 
-No entities, attributes, keys, or relationships differ between the ERD, the SQL script, and the EF Core model.
+The intended database entities, attributes, primary keys, foreign keys, and relationships remain consistent across the ERD, the Part 1 SQL script, and the Entity Framework Core model.
 
+## 10. Swagger API Documentation
 
-## Swagger
+Swagger UI provides an interactive interface for exploring and testing the API.
 
-Swagger UI is available at /swagger while the API runs in the Development environment. Every endpoint is listed and can be tested directly in the browser, grouped by controller (Auth, Profile, Events, Categories, Routes, Enrolments, Results). Endpoint descriptions come from the XML comments on each controller action.
+When the application is running in the Development environment, Swagger is available at `/swagger`.
 
-## Unit Testing
+The endpoints are grouped according to their controllers:
 
-The RaceDay.Api.Tests project contains 54 xUnit tests. Each test class starts the real API in memory using WebApplicationFactory and swaps SQL Server for a temporary in-memory database so the tests never touch the real database.
+- Authentication
+- Profile
+- Events
+- Categories
+- Routes
+- Enrolments
+- Results
 
-## Automated Tests
+XML documentation comments provide descriptions for the controller actions. Through Swagger, developers can inspect request parameters, submit API requests, and review the returned responses.
 
-| Test class | What it covers |
+For protected operations, register and log in first so that the required session is established.
+
+## 11. Automated Testing
+
+The `RaceDay.Api.Tests` project contains 54 xUnit tests covering important application behaviour, validation rules, authentication, and access permissions.
+
+Tests use `WebApplicationFactory` to run the API in an in-memory test host. SQL Server is replaced with an Entity Framework Core In-Memory database, allowing the tests to run without accessing the application's real database.
+
+### Test coverage
+
+| Test class | Main areas tested |
 |---|---|
-| `AuthTests` | Registration, login, logout, and profile tests. |
-| `EventTests` | Public viewing and organiser validation tests. |
-| `RoleAccessTests` | Protected endpoint access checks. |
-| `EnrolmentTests` | Enrolment creation, ownership, and validation tests. |
-| `ResultTests` | Capturing and viewing participant results. |
+| `AuthTests` | Account registration, login, logout, and profile operations. |
+| `EventTests` | Public event access and organiser-related validation. |
+| `RoleAccessTests` | Access restrictions on protected endpoints. |
+| `EnrolmentTests` | Enrolment creation, validation, and ownership rules. |
+| `ResultTests` | Recording and viewing participant results. |
 
-Run the tests in Visual Studio or with:
+### Running the tests
+
+You can execute the test suite from Visual Studio's Test Explorer or run the following command in the solution directory:
 
 ```bash
 dotnet test RaceDay.sln
 ```
 
-All 54 tests pass locally and in GitHub Actions.
+The project's reported local test result is that all 54 tests pass. The GitHub Actions workflow is also configured to execute the automated tests. Confirm the latest workflow run to verify the current result.
 
-## CI/CD
+## 12. Continuous Integration and Continuous Delivery (CI/CD)
 
-.github/workflows/part2-ci.yml runs on every push and pull request. It checks out the repository, installs .NET 8, restores packages, builds RaceDay.sln in Release mode, and runs all unit tests. The tests use an in-memory database, so the workflow does not need SQL Server.
+RaceDay uses GitHub Actions to automate build and test checks whenever changes are pushed to the repository or a pull request is created.
 
-.github/workflows/part1-ci.yml also still runs and checks the Part 1 documents.
+The Part 2 workflow is located at:
 
-Successful build screenshot For Par2 CI:
+```text
+.github/workflows/part2-ci.yml
+```
 
-<img width="818" height="45" alt="image" src="https://github.com/user-attachments/assets/b3eb33e5-9a2c-4992-9537-8c4f4730f8a6" />
+Its configured tasks are:
 
+1. Check out the repository.
+2. Install the .NET 8 SDK.
+3. Restore the required NuGet packages.
+4. Build `RaceDay.sln` using the Release configuration.
+5. Execute the automated tests.
 
-## Video Presentation
+Because the tests use an in-memory database, the workflow does not require a running SQL Server instance.
 
-Part 2 YouTube link (unlisted):
-https://youtu.be/AqaLe4g8zug
+The repository also contains a separate workflow:
+
+```text
+.github/workflows/part1-ci.yml
+```
+
+This workflow checks the Part 1 documentation.
+
+### CI build evidence
+
+Include a screenshot of a successful Part 2 GitHub Actions workflow run here.
+
+*Suggested screenshot caption: Figure 1 — Successful execution of the RaceDay Part 2 CI workflow.*
+
+## 13. Video Demonstration
+
+The video presentation demonstrates the completed Part 2 implementation.
+
+**YouTube presentation link (unlisted):**
+
+[Insert the Part 2 YouTube video URL here]
+
+Ensure the link is accessible to the intended reviewer before submitting the project.
+
+## 14. Conclusion
+
+The RaceDay Event Management System provides a structured API for managing sporting events, participant enrolments, routes, categories, and results. Its implementation combines ASP.NET Core, Entity Framework Core, and SQL Server with session-based authentication, role-based permissions, and ownership validation.
+
+The addition of automated testing and GitHub Actions provides a repeatable way to check the solution during development. Together with the Part 1 planning documents, the Part 2 implementation establishes the application's data structure, API functionality, and testing workflow.
