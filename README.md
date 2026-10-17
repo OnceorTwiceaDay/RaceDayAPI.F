@@ -337,7 +337,7 @@ The video presentation demonstrates the completed Part 2 implementation.
 
 **YouTube presentation link (unlisted):**
 
-[Insert the Part 2 YouTube video URL here]
+https://youtu.be/Kzx1xUYLwpQ
 
 Ensure the link is accessible to the intended reviewer before submitting the project.
 
