@@ -1,86 +1,26 @@
-
-name: RaceDay API CI
+name: Part 2 Build and Test
 
 on:
   push:
-    branches:
-      - main
-      - master
   pull_request:
-    branches:
-      - main
-      - master
-  workflow_dispatch:
-
-permissions:
-  contents: read
 
 jobs:
-  build:
-    name: Restore, Build and Test
+  build-and-test:
     runs-on: ubuntu-latest
-
-    env:
-      PROJECT_PATH: RaceDay.API/RaceDay.API.csproj
-      BUILD_CONFIGURATION: Release
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up .NET 10
+      - name: Install .NET 8
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '10.x'
+          dotnet-version: 8.0.x
 
-      - name: Verify project file
-        run: |
-          if [ ! -f "$PROJECT_PATH" ]; then
-            echo "::error::Project not found: $PROJECT_PATH"
-            echo "Update PROJECT_PATH in this workflow to match your repository."
-            exit 1
-          fi
+      - name: Restore packages
+        run: dotnet restore RaceDay.sln
 
-      - name: Restore NuGet packages
-        run: dotnet restore "$PROJECT_PATH"
+      - name: Build solution
+        run: dotnet build RaceDay.sln --configuration Release --no-restore
 
-      - name: Build RaceDay API
-        run: >
-          dotnet build "$PROJECT_PATH"
-          --configuration "$BUILD_CONFIGURATION"
-          --no-restore
-
-      - name: Run automated tests
-        shell: bash
-        run: |
-          mapfile -t TEST_PROJECTS < <(
-            find . -type f \
-              \( -name '*Tests.csproj' -o -name '*Test.csproj' \) \
-              -not -path '*/bin/*' \
-              -not -path '*/obj/*'
-          )
-
-          if [ ${#TEST_PROJECTS[@]} -eq 0 ]; then
-            echo "No test projects found. Automated tests skipped."
-          else
-            for project in "${TEST_PROJECTS[@]}"; do
-              echo "Testing $project"
-              dotnet test "$project" \
-                --configuration "$BUILD_CONFIGURATION"
-            done
-          fi
-
-      - name: Publish API
-        run: >
-          dotnet publish "$PROJECT_PATH"
-          --configuration "$BUILD_CONFIGURATION"
-          --no-build
-          --output "${{ runner.temp }}/raceday-publish"
-
-      - name: Upload published API artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: RaceDay-API
-          path: ${{ runner.temp }}/raceday-publish/
-          if-no-files-found: error
-          retention-days: 14
+      - name: Run unit tests
+        run: dotnet test RaceDay.sln --configuration Release --no-build --verbosity normal
