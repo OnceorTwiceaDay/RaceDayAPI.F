@@ -153,7 +153,7 @@ The application does not automatically insert sample records. Create user accoun
 5. Press **F5** to build and run the application.
 6. Open the Swagger interface at:
 
-   [https://localhost:7236/swagger](https://localhost:7236/swagger)
+https://localhost:59670/swagger/index.html
 
 ### Option B: Run through the terminal
 
@@ -165,7 +165,7 @@ dotnet run --project RaceDay.Api --launch-profile https
 
 Once the API starts, access Swagger at:
 
-[https://localhost:7236/swagger](https://localhost:7236/swagger)
+https://localhost:59670/swagger/index.html
 
 The displayed port may differ if the HTTPS launch profile has been configured differently.
 
