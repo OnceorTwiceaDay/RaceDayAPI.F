@@ -27,9 +27,9 @@ Copy `.env.example` to `.env` and replace the SQL Server password. Set `AZURE_ST
 
 `docker compose up --build -d`
 
-Then apply EF migrations to the SQL Server database in the Compose stack before trying registration or events. Compose starts SQL Server, API and MVC, but does **not** run database migrations. Browse `http://localhost:8080`; API lives at `http://localhost:8081`.
+Docker Compose enables the API's opt-in startup migrations and retries while SQL Server becomes ready. For local development this makes startup a single command; do not enable automatic migrations for production without a controlled deployment plan. Browse `http://localhost:8080`; API lives at `http://localhost:8081`.
 
-For local database migrations against the Compose database, install the EF CLI and run from your machine with `ConnectionStrings__DefaultConnection` pointing at `localhost,1433` with the password from `.env`. Avoid committing credentials.
+For manual migrations, install the EF CLI and point `ConnectionStrings__DefaultConnection` at your SQL Server. Avoid committing credentials.
 
 ## Session integration
 
