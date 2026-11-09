@@ -1,0 +1,35 @@
+services:
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD:?Set a strong MSSQL_SA_PASSWORD in .env}
+    volumes:
+      - sql_data:/var/opt/mssql
+    ports:
+      - "1433:1433"
+  api:
+    build:
+      context: .
+      dockerfile: RaceDay.Api/Dockerfile
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: "Server=db,1433;Database=RaceDayDb;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True;Encrypt=True"
+      AzureStorage__ConnectionString: ${AZURE_STORAGE_CONNECTION_STRING:-}
+    ports:
+      - "8081:8080"
+    depends_on:
+      - db
+  mvc:
+    build:
+      context: .
+      dockerfile: RaceDay.MVC/Dockerfile
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      RaceDayApi__BaseUrl: http://api:8080/
+    ports:
+      - "8080:8080"
+    depends_on:
+      - api
+volumes:
+  sql_data:
