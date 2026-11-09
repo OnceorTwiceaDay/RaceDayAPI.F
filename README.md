@@ -1,3 +1,13 @@
+## Part 3 MVC website (current)
+
+The ASP.NET Core MVC application now lives in [RaceDay.MVC](RaceDay.MVC). It consumes RaceDay.Api; the MVC layer does not connect to SQL Server directly.
+
+**Visual Studio:** Open `RaceDay.sln`, configure `RaceDay.Api` and `RaceDay.MVC` as multiple startup projects, then press F5. Default addresses are MVC `http://localhost:5050` and API `https://localhost:59670`. The API's Development settings automatically apply pending EF Core migrations, including the Part 3 profile picture and event banner columns, for databases managed through EF migrations.
+
+**Setup, testing, Azure Storage and troubleshooting:** [Read the Part 3 guide](RaceDay.MVC/README.md).
+
+---
+
 # RaceDay Event Management System — Part 2
 
 **Module:** PROG6212 — 
