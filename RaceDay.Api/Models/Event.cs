@@ -18,6 +18,7 @@ public class Event
     public decimal DistanceKm { get; set; }
 
     public string EventType { get; set; } = string.Empty; // "Running" | "Walking" | "Cycling"
+    public string? BannerImageUrl { get; set; }
     public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
 
     // Navigation properties
