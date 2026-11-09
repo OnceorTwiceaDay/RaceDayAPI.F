@@ -1,11 +1,13 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using RaceDay.Api.Data;
+using RaceDay.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Controllers
 builder.Services.AddControllers();
+builder.Services.AddScoped<BlobImageStore>();
 
 // EF Core + SQL Server (Code First - see Data/RaceDayDbContext.cs)
 builder.Services.AddDbContext<RaceDayDbContext>(options =>
