@@ -68,7 +68,7 @@ public sealed class RaceDayApiClient
             }
             if (response.IsSuccessStatusCode)
             {
-                if (response.Content.Headers.ContentLength == 0) return new ApiReply<T>(true, default, null, response.StatusCode);
+                if (response.StatusCode == HttpStatusCode.NoContent || response.Content.Headers.ContentLength == 0) return new ApiReply<T>(true, default, null, response.StatusCode);
                 var data = await response.Content.ReadFromJsonAsync<T>(Json);
                 return new ApiReply<T>(true, data, null, response.StatusCode);
             }
