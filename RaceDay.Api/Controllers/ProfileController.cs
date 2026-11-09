@@ -48,7 +48,7 @@ public class ProfileController : RaceDayControllerBase
         await _db.SaveChangesAsync();
 
         return Ok(ToDto(user.UserId, user.FullName, user.Email, user.Role.ToString(),
-                         user.PhoneNumber, user.DateOfBirth, user.RegisteredDate));
+                         user.PhoneNumber, user.DateOfBirth, user.RegisteredDate, user.ProfileImageUrl));
     }
 
     private static ProfileDto ToDto(int id, string name, string email, string role,
