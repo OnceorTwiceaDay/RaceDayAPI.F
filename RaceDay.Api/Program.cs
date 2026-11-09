@@ -58,8 +58,11 @@ if (builder.Configuration.GetValue<bool>("RaceDay:AutoMigrate"))
         try
         {
             using var scope = app.Services.CreateScope();
-            await scope.ServiceProvider.GetRequiredService<RaceDayDbContext>()
-                .Database.MigrateAsync();
+            var database = scope.ServiceProvider.GetRequiredService<RaceDayDbContext>().Database;
+            // In-memory test databases do not support relational migrations.
+            if (database.IsRelational())
+                await database.MigrateAsync();
+            app.Logger.LogInformation("RaceDay database schema is ready.");
             break;
         }
         catch (Microsoft.Data.SqlClient.SqlException) when (attempt < attempts)
