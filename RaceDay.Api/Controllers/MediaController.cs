@@ -48,9 +48,12 @@ public class MediaController : RaceDayControllerBase
         return Ok(new MediaUploadResponse { MediaUrl = user.ProfileImageUrl });
     }
 
-    [HttpGet("api/media/{kind:regex(^(banners|profiles)$)}/{name:regex(^[a-f0-9]{32}\\.(jpg|png|webp)$)}")]
+    [HttpGet("api/media/{kind}/{name}")]
     public async Task<IActionResult> Download(string kind, string name, CancellationToken token)
     {
+        if (kind is not ("banners" or "profiles") ||
+            !System.Text.RegularExpressions.Regex.IsMatch(name, @"^[a-f0-9]{32}\.(jpg|png|webp)$"))
+            return NotFound();
         // Only serve image keys referenced in existing records.
         var path = $"/api/media/{kind}/{name}";
         var linked = kind == "banners"
