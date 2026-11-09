@@ -14,6 +14,7 @@ services:
       dockerfile: RaceDay.Api/Dockerfile
     environment:
       ASPNETCORE_ENVIRONMENT: Development
+      RaceDay__AutoMigrate: "true"
       ConnectionStrings__DefaultConnection: "Server=db,1433;Database=RaceDayDb;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True;Encrypt=True"
       AzureStorage__ConnectionString: ${AZURE_STORAGE_CONNECTION_STRING:-}
     ports:
