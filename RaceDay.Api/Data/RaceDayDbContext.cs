@@ -37,6 +37,7 @@ public class RaceDayDbContext : DbContext
                   .HasMaxLength(20)
                   .IsRequired();
             entity.Property(u => u.PhoneNumber).HasMaxLength(20);
+            entity.Property(u => u.ProfileImageUrl).HasMaxLength(300);
             entity.Property(u => u.RegisteredDate).HasDefaultValueSql("GETUTCDATE()");
         });
 
@@ -50,6 +51,7 @@ public class RaceDayDbContext : DbContext
             entity.Property(e => e.Location).HasMaxLength(150).IsRequired();
             entity.Property(e => e.DistanceKm).HasColumnType("decimal(6,2)").IsRequired();
             entity.Property(e => e.EventType).HasMaxLength(20).IsRequired();
+            entity.Property(e => e.BannerImageUrl).HasMaxLength(300);
             entity.Property(e => e.CreatedDate).HasDefaultValueSql("GETUTCDATE()");
 
             entity.HasOne(e => e.Organiser)

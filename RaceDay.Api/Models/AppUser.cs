@@ -18,6 +18,7 @@ public class AppUser
     public Role Role { get; set; }
     public string? PhoneNumber { get; set; }
     public DateOnly? DateOfBirth { get; set; }
+    public string? ProfileImageUrl { get; set; }
     public DateTime RegisteredDate { get; set; } = DateTime.UtcNow;
 
     // Navigation properties

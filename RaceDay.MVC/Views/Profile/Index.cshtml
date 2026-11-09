@@ -1,0 +1,12 @@
+@model ProfilePageViewModel
+@{ ViewData["Title"] = "My profile"; }
+<section class="container section"><p class="eyebrow">YOUR RACEDAY IDENTITY</p><h1>My profile</h1><div class="row g-4 mt-3"><div class="col-lg-4"><div class="surface text-center">
+@if (MediaUrls.ForMvc(Model.Profile.ProfileImageUrl) is string img) { <img src="@img" class="avatar" alt="Profile picture" /> }
+else { <div class="avatar avatar-placeholder">🏅</div> }
+<h3 class="mt-3">@Model.Profile.FullName</h3><p class="tag">@Model.Profile.Role</p><p class="muted">@Model.Profile.Email</p></div></div><div class="col-lg-8"><div class="surface"><h3>Update details</h3>
+<form asp-action="Save" method="post" enctype="multipart/form-data">@Html.AntiForgeryToken()
+<label class="form-label mt-3" for="FullName">Full name</label><input class="form-control" name="FullName" id="FullName" value="@Model.Profile.FullName" required maxlength="100" />
+<label class="form-label mt-3" for="PhoneNumber">Phone number</label><input class="form-control" name="PhoneNumber" id="PhoneNumber" value="@Model.Profile.PhoneNumber" />
+<label class="form-label mt-3" for="DateOfBirth">Date of birth</label><input type="date" class="form-control" name="DateOfBirth" id="DateOfBirth" value="@Model.Profile.DateOfBirth?.ToString("yyyy-MM-dd")" />
+<label class="form-label mt-3" for="image">Profile photo (JPG, PNG, WebP, up to 5 MB)</label><input class="form-control" type="file" name="image" id="image" accept="image/png,image/jpeg,image/webp" />
+<button class="btn btn-accent mt-4">Save profile</button></form></div></div></div></section>

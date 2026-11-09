@@ -45,6 +45,7 @@ public class ProfileDto
     public string? PhoneNumber { get; set; }
     public DateOnly? DateOfBirth { get; set; }
     public DateTime RegisteredDate { get; set; }
+    public string? ProfileImageUrl { get; set; }
 }
 
 public class UpdateProfileRequest
@@ -82,6 +83,7 @@ public class EventDto
     public decimal DistanceKm { get; set; }
     public string EventType { get; set; } = string.Empty;
     public DateTime CreatedDate { get; set; }
+    public string? BannerImageUrl { get; set; }
 }
 
 // =====================================================================
@@ -184,6 +186,8 @@ public class ResultDto
     public int EventId { get; set; }
     public string EventName { get; set; } = string.Empty;
     public string ParticipantName { get; set; } = string.Empty;
+    public string CategoryName { get; set; } = string.Empty;
+    public DateOnly EventDate { get; set; }
     public TimeSpan? FinishTime { get; set; }
     public int? FinishPosition { get; set; }
     public int? CategoryPosition { get; set; }

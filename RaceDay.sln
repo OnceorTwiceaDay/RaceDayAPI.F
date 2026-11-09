@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RaceDay.Contracts", "RaceDa
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RaceDay.Api.Tests", "RaceDay.Api.Tests\RaceDay.Api.Tests.csproj", "{7F8157C2-F6A1-463A-9368-95865153120D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RaceDay.MVC", "RaceDay.MVC\RaceDay.MVC.csproj", "{0D533DAC-D65B-4FCF-A6B3-6899FE159A01}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{7F8157C2-F6A1-463A-9368-95865153120D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7F8157C2-F6A1-463A-9368-95865153120D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7F8157C2-F6A1-463A-9368-95865153120D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0D533DAC-D65B-4FCF-A6B3-6899FE159A01}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0D533DAC-D65B-4FCF-A6B3-6899FE159A01}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0D533DAC-D65B-4FCF-A6B3-6899FE159A01}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0D533DAC-D65B-4FCF-A6B3-6899FE159A01}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

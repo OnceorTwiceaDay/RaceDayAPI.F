@@ -144,6 +144,7 @@ public class EventsController : RaceDayControllerBase
         Location = ev.Location,
         DistanceKm = ev.DistanceKm,
         EventType = ev.EventType,
-        CreatedDate = ev.CreatedDate
+        CreatedDate = ev.CreatedDate,
+        BannerImageUrl = ev.BannerImageUrl
     };
 }

@@ -1,11 +1,13 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using RaceDay.Api.Data;
+using RaceDay.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Controllers
 builder.Services.AddControllers();
+builder.Services.AddScoped<BlobImageStore>();
 
 // EF Core + SQL Server (Code First - see Data/RaceDayDbContext.cs)
 builder.Services.AddDbContext<RaceDayDbContext>(options =>
@@ -46,6 +48,26 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+// Opt-in only for local Docker Compose: create/update schema after SQL Server becomes ready.
+if (builder.Configuration.GetValue<bool>("RaceDay:AutoMigrate"))
+{
+    const int attempts = 30;
+    for (var attempt = 1; attempt <= attempts; attempt++)
+    {
+        try
+        {
+            using var scope = app.Services.CreateScope();
+            await scope.ServiceProvider.GetRequiredService<RaceDayDbContext>()
+                .Database.MigrateAsync();
+            break;
+        }
+        catch (Microsoft.Data.SqlClient.SqlException) when (attempt < attempts)
+        {
+            await Task.Delay(TimeSpan.FromSeconds(2));
+        }
+    }
+}
 
 if (app.Environment.IsDevelopment())
 {
