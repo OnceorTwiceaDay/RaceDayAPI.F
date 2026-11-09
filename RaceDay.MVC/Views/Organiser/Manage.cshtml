@@ -1,11 +1,222 @@
 @model OrganiserEventViewModel
-@{ ViewData["Title"] = "Manage " + Model.Event.EventName; }
-<section class="container section"><a asp-action="Index" class="back-link">← Dashboard</a><div class="d-flex flex-wrap justify-content-between align-items-center mt-3 gap-3"><div><p class="eyebrow">EVENT MANAGEMENT</p><h1>@Model.Event.EventName</h1><p class="muted">@Model.Event.Location · @Model.Event.EventDate.ToString("dd MMM yyyy")</p></div><a class="btn btn-outline-dark" asp-action="Edit" asp-route-id="@Model.Event.EventId">Edit event</a></div>
-<h2 class="mt-5">Categories</h2><div class="row g-3 mt-2">@foreach (var c in Model.Categories) { <div class="col-md-4"><div class="surface"><h4>@c.CategoryName</h4><p class="muted">@c.DistanceKm km · R @c.EntryFee</p><form asp-action="DeleteCategory" method="post">@Html.AntiForgeryToken()<input type="hidden" name="eventId" value="@Model.Event.EventId" /><input type="hidden" name="categoryId" value="@c.CategoryId" /><button class="btn btn-sm btn-outline-danger">Delete</button></form></div></div> }</div>
-<div class="surface mt-4"><h3>Add category</h3><form asp-action="AddCategory" method="post" class="row g-3 mt-1">@Html.AntiForgeryToken()<input type="hidden" name="eventId" value="@Model.Event.EventId" /><div class="col-md-4"><label class="form-label">Name</label><input name="CategoryName" class="form-control" required /></div><div class="col-md-2"><label class="form-label">Distance (km)</label><input name="DistanceKm" type="number" class="form-control" step="0.01" min="0.01" required /></div><div class="col-md-2"><label class="form-label">Minimum age</label><input name="MinAge" type="number" min="0" class="form-control" value="0" required /></div><div class="col-md-2"><label class="form-label">Maximum age</label><input name="MaxAge" type="number" min="0" class="form-control" /></div><div class="col-md-2"><label class="form-label">Entry fee (R)</label><input name="EntryFee" type="number" min="0" step="0.01" class="form-control" value="0" required /></div><div class="col-12"><button class="btn btn-accent">Add category</button></div></form></div>
-<h2 class="mt-5">Enrolments (@Model.Enrolments.Count)</h2><div class="table-responsive surface mt-3"><table class="table align-middle mb-0"><thead><tr><th>Participant</th><th>Category</th><th>Payment</th><th>Status</th><th>Update status</th></tr></thead><tbody>
-@foreach (var e in Model.Enrolments) { <tr><td>@e.ParticipantName</td><td>@e.CategoryName</td><td>@e.PaymentStatus</td><td><span class="status status-@e.Status.ToLowerInvariant()">@e.Status</span></td><td><form asp-action="SetStatus" method="post" class="d-flex gap-2">@Html.AntiForgeryToken()<input type="hidden" name="eventId" value="@Model.Event.EventId" /><input type="hidden" name="enrolmentId" value="@e.EnrolmentId" /><select name="status" class="form-select form-select-sm"><option selected="@(e.Status == "Pending")">Pending</option><option selected="@(e.Status == "Confirmed")">Confirmed</option><option selected="@(e.Status == "Cancelled")">Cancelled</option></select><button class="btn btn-sm btn-outline-dark">Save</button></form></td></tr> }
-</tbody></table>@if (!Model.Enrolments.Any()) { <p class="muted p-3">No enrolments yet.</p> }</div>
-<h2 class="mt-5">Capture and publish results</h2><p class="muted">Enter each finisher's time and position. Existing results are updated when resubmitted.</p><div class="surface table-responsive mt-3"><table class="table align-middle mb-0"><thead><tr><th>Entrant</th><th>Category</th><th>Finish time (hh:mm:ss)</th><th>Overall</th><th>Category position</th><th>Status</th><th></th></tr></thead><tbody>
-@foreach (var e in Model.Enrolments) { var existing = Model.Results.FirstOrDefault(r => r.EnrolmentId == e.EnrolmentId); var fid = $"result-{e.EnrolmentId}"; <tr><td>@e.ParticipantName</td><td>@e.CategoryName</td><td><input form="@fid" type="text" name="FinishTime" class="form-control form-control-sm" placeholder="01:22:35" value="@existing?.FinishTime" /></td><td><input form="@fid" type="number" min="1" name="FinishPosition" class="form-control form-control-sm" value="@existing?.FinishPosition" /></td><td><input form="@fid" type="number" min="1" name="CategoryPosition" class="form-control form-control-sm" value="@existing?.CategoryPosition" /></td><td><select form="@fid" name="Status" class="form-select form-select-sm"><option selected="@(existing?.Status == "Finished")">Finished</option><option selected="@(existing?.Status == "DNF")">DNF</option><option selected="@(existing?.Status == "DNS")">DNS</option></select></td><td><form id="@fid" asp-action="SaveResult" method="post">@Html.AntiForgeryToken()<input type="hidden" name="EventId" value="@Model.Event.EventId" /><input type="hidden" name="EnrolmentId" value="@e.EnrolmentId" /><button class="btn btn-accent btn-sm">Publish</button></form></td></tr> }
-</tbody></table>@if (!Model.Enrolments.Any()) { <p class="muted p-3">No entrants available for result capture.</p> }</div></section>
+@{
+    ViewData["Title"] = "Manage " + Model.Event.EventName;
+}
+
+<section class="container section">
+    <a asp-action="Index" class="back-link">← Dashboard</a>
+    <div class="d-flex flex-wrap justify-content-between align-items-center mt-3 gap-3">
+        <div>
+            <p class="eyebrow">EVENT MANAGEMENT</p>
+            <h1>@Model.Event.EventName</h1>
+            <p class="muted">@Model.Event.Location · @Model.Event.EventDate.ToString("dd MMM yyyy")</p>
+        </div>
+        <a class="btn btn-outline-dark" asp-action="Edit" asp-route-id="@Model.Event.EventId">Edit event</a>
+    </div>
+
+    <h2 class="mt-5">Event categories</h2>
+    <div class="row g-3 mt-2">
+        @foreach (var category in Model.Categories)
+        {
+            <div class="col-md-6 col-xl-4">
+                <div class="surface h-100">
+                    <h4>@category.CategoryName</h4>
+                    <p class="muted">@category.DistanceKm km · Age @category.MinAge+ · R @category.EntryFee.ToString("0.00")</p>
+                    <details class="mb-3">
+                        <summary class="fw-bold mb-2">Edit category</summary>
+                        <form asp-action="UpdateCategory" method="post" class="d-grid gap-2">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="eventId" value="@Model.Event.EventId" />
+                            <input type="hidden" name="categoryId" value="@category.CategoryId" />
+                            <label class="form-label mb-0">Category name</label>
+                            <input name="CategoryName" class="form-control" value="@category.CategoryName" required />
+                            <label class="form-label mb-0">Distance (km)</label>
+                            <input name="DistanceKm" class="form-control" type="number" step="0.01" min="0.01" value="@category.DistanceKm" required />
+                            <label class="form-label mb-0">Minimum age</label>
+                            <input name="MinAge" class="form-control" type="number" min="0" value="@category.MinAge" required />
+                            <label class="form-label mb-0">Maximum age (optional)</label>
+                            <input name="MaxAge" class="form-control" type="number" min="0" value="@category.MaxAge" />
+                            <label class="form-label mb-0">Fee (R)</label>
+                            <input name="EntryFee" class="form-control" type="number" min="0" step="0.01" value="@category.EntryFee" required />
+                            <button class="btn btn-accent" type="submit">Save category</button>
+                        </form>
+                    </details>
+                    <form asp-action="DeleteCategory" method="post"
+                          onsubmit="return confirm('Delete this category? Enrolled categories cannot be deleted.')">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="eventId" value="@Model.Event.EventId" />
+                        <input type="hidden" name="categoryId" value="@category.CategoryId" />
+                        <button class="btn btn-sm btn-outline-danger">Delete category</button>
+                    </form>
+                </div>
+            </div>
+        }
+        @if (!Model.Categories.Any())
+        {
+            <p class="muted">No categories yet. Add one so participants can enter.</p>
+        }
+    </div>
+
+    <div class="surface mt-4">
+        <h3>Add a category</h3>
+        <form asp-action="AddCategory" method="post" class="row g-3 mt-1">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="eventId" value="@Model.Event.EventId" />
+            <div class="col-md-4">
+                <label class="form-label" for="newCategoryName">Name</label>
+                <input id="newCategoryName" name="CategoryName" class="form-control" required />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label" for="newDistance">Distance (km)</label>
+                <input id="newDistance" name="DistanceKm" type="number" class="form-control" step="0.01" min="0.01" required />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label" for="newMinAge">Minimum age</label>
+                <input id="newMinAge" name="MinAge" type="number" min="0" class="form-control" value="0" required />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label" for="newMaxAge">Maximum age</label>
+                <input id="newMaxAge" name="MaxAge" type="number" min="0" class="form-control" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label" for="newFee">Entry fee (R)</label>
+                <input id="newFee" name="EntryFee" type="number" min="0" step="0.01" class="form-control" value="0" required />
+            </div>
+            <div class="col-12"><button class="btn btn-accent">Add category</button></div>
+        </form>
+    </div>
+
+    <h2 class="mt-5">Race routes</h2>
+    <div class="row g-3 mt-2">
+        @foreach (var route in Model.Routes)
+        {
+            <div class="col-md-6">
+                <div class="surface">
+                    <h4>@route.RouteName</h4>
+                    <p class="muted">@route.DistanceKm km · @route.StartPoint → @route.EndPoint</p>
+                    <details class="mb-3">
+                        <summary class="fw-bold mb-2">Edit route</summary>
+                        <form asp-action="UpdateRoute" method="post" class="d-grid gap-2">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="eventId" value="@Model.Event.EventId" />
+                            <input type="hidden" name="routeId" value="@route.RouteId" />
+                            <label class="form-label mb-0">Route name</label>
+                            <input name="RouteName" class="form-control" value="@route.RouteName" required />
+                            <label class="form-label mb-0">Distance (km)</label>
+                            <input name="DistanceKm" class="form-control" type="number" min="0.01" step="0.01" value="@route.DistanceKm" required />
+                            <label class="form-label mb-0">Start point</label>
+                            <input name="StartPoint" class="form-control" value="@route.StartPoint" required />
+                            <label class="form-label mb-0">End point</label>
+                            <input name="EndPoint" class="form-control" value="@route.EndPoint" required />
+                            <label class="form-label mb-0">Elevation gain (metres)</label>
+                            <input name="ElevationGainM" class="form-control" type="number" min="0" value="@route.ElevationGainM" />
+                            <label class="form-label mb-0">Map URL</label>
+                            <input name="MapUrl" class="form-control" type="url" value="@route.MapUrl" />
+                            <button class="btn btn-accent" type="submit">Save route</button>
+                        </form>
+                    </details>
+                    <form asp-action="DeleteRoute" method="post" onsubmit="return confirm('Remove this route?')">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="eventId" value="@Model.Event.EventId" />
+                        <input type="hidden" name="routeId" value="@route.RouteId" />
+                        <button class="btn btn-sm btn-outline-danger">Delete route</button>
+                    </form>
+                </div>
+            </div>
+        }
+        @if (!Model.Routes.Any())
+        {
+            <p class="muted">No routes yet.</p>
+        }
+    </div>
+    <div class="surface mt-4">
+        <h3>Add a race route</h3>
+        <form asp-action="AddRoute" method="post" class="row g-3">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="eventId" value="@Model.Event.EventId" />
+            <div class="col-md-4"><label class="form-label">Route name</label><input name="RouteName" class="form-control" required /></div>
+            <div class="col-md-2"><label class="form-label">Distance (km)</label><input name="DistanceKm" type="number" class="form-control" min="0.01" step="0.01" required /></div>
+            <div class="col-md-3"><label class="form-label">Start point</label><input name="StartPoint" class="form-control" required /></div>
+            <div class="col-md-3"><label class="form-label">End point</label><input name="EndPoint" class="form-control" required /></div>
+            <div class="col-md-3"><label class="form-label">Elevation gain (m)</label><input name="ElevationGainM" type="number" min="0" class="form-control" /></div>
+            <div class="col-md-7"><label class="form-label">Route map URL (optional)</label><input name="MapUrl" type="url" class="form-control" /></div>
+            <div class="col-md-2 d-flex align-items-end"><button class="btn btn-accent w-100">Add route</button></div>
+        </form>
+    </div>
+
+    <h2 class="mt-5">Enrolments (@Model.Enrolments.Count)</h2>
+    <div class="table-responsive surface mt-3">
+        <table class="table align-middle mb-0">
+            <thead><tr><th>Participant</th><th>Category</th><th>Payment</th><th>Status</th><th>Update status</th></tr></thead>
+            <tbody>
+            @foreach (var enrolment in Model.Enrolments)
+            {
+                <tr>
+                    <td>@enrolment.ParticipantName</td>
+                    <td>@enrolment.CategoryName</td>
+                    <td>@enrolment.PaymentStatus</td>
+                    <td><span class="status status-@enrolment.Status.ToLowerInvariant()">@enrolment.Status</span></td>
+                    <td>
+                        <form asp-action="SetStatus" method="post" class="d-flex gap-2">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="eventId" value="@Model.Event.EventId" />
+                            <input type="hidden" name="enrolmentId" value="@enrolment.EnrolmentId" />
+                            <select name="status" class="form-select form-select-sm">
+                                <option selected="@(enrolment.Status == "Pending")">Pending</option>
+                                <option selected="@(enrolment.Status == "Confirmed")">Confirmed</option>
+                                <option selected="@(enrolment.Status == "Cancelled")">Cancelled</option>
+                            </select>
+                            <button class="btn btn-sm btn-outline-dark">Save</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+        @if (!Model.Enrolments.Any())
+        {
+            <p class="muted p-3">No enrolments yet.</p>
+        }
+    </div>
+
+    <h2 class="mt-5">Capture and publish results</h2>
+    <p class="muted">Enter each finisher's time and position. Resubmitting an existing result corrects it.</p>
+    <div class="surface table-responsive mt-3">
+        <table class="table align-middle mb-0">
+            <thead><tr><th>Entrant</th><th>Category</th><th>Time (hh:mm:ss)</th><th>Overall</th><th>Category position</th><th>Status</th><th></th></tr></thead>
+            <tbody>
+            @foreach (var enrolment in Model.Enrolments)
+            {
+                var existing = Model.Results.FirstOrDefault(r => r.EnrolmentId == enrolment.EnrolmentId);
+                var formId = $"result-{enrolment.EnrolmentId}";
+                <tr>
+                    <td>@enrolment.ParticipantName</td>
+                    <td>@enrolment.CategoryName</td>
+                    <td><input form="@formId" type="text" name="FinishTime" class="form-control form-control-sm" placeholder="01:22:35" value="@existing?.FinishTime" /></td>
+                    <td><input form="@formId" type="number" min="1" name="FinishPosition" class="form-control form-control-sm" value="@existing?.FinishPosition" /></td>
+                    <td><input form="@formId" type="number" min="1" name="CategoryPosition" class="form-control form-control-sm" value="@existing?.CategoryPosition" /></td>
+                    <td>
+                        <select form="@formId" name="Status" class="form-select form-select-sm">
+                            <option selected="@(existing?.Status == "Finished")">Finished</option>
+                            <option selected="@(existing?.Status == "DNF")">DNF</option>
+                            <option selected="@(existing?.Status == "DNS")">DNS</option>
+                        </select>
+                    </td>
+                    <td>
+                        <form id="@formId" asp-action="SaveResult" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="EventId" value="@Model.Event.EventId" />
+                            <input type="hidden" name="EnrolmentId" value="@enrolment.EnrolmentId" />
+                            <button class="btn btn-accent btn-sm">Publish</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+        @if (!Model.Enrolments.Any())
+        {
+            <p class="muted p-3">No entrants available for result capture.</p>
+        }
+    </div>
+</section>
