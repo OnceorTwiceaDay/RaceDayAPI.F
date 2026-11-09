@@ -5,7 +5,7 @@ The MVC front end uses the existing ASP.NET Core API for **all data operations**
 ## Visual Studio quick start
 
 1. Open **RaceDay.sln** in Visual Studio 2022 with .NET 8 installed.
-2. Configure a working \`ConnectionStrings:DefaultConnection\` for **RaceDay.Api** (the existing SQL Server / RaceDayDb). Do not commit database passwords.
+2. Configure a working `ConnectionStrings:DefaultConnection` for **RaceDay.Api** (the existing SQL Server / RaceDayDb). Do not commit database passwords.
 3. Right-click the solution → **Configure Startup Projects** → **Multiple startup projects**:
    - RaceDay.Api: **Start**
    - RaceDay.MVC: **Start**
@@ -14,22 +14,22 @@ The MVC front end uses the existing ASP.NET Core API for **all data operations**
 5. Test the API JSON health endpoint at **https://localhost:59670/api/health** and Swagger at **https://localhost:59670/swagger**. The actual port can be different if you changed the API launch profile.
 6. Open the MVC website at **http://localhost:5050**.
 
-The default MVC API destination is \`https://localhost:59670/\`, matching the API's development launch profile. Override \`RaceDayApi:BaseUrl\` via environment configuration if your API port changes. Do **not** point it at the MVC port. An HTTP-to-HTTPS redirect is treated as an error because server-side API calls deliberately do not follow redirects.
+The default MVC API destination is `https://localhost:59670/`, matching the API's development launch profile. Override `RaceDayApi:BaseUrl` via environment configuration if your API port changes. Do **not** point it at the MVC port. An HTTP-to-HTTPS redirect is treated as an error because server-side API calls deliberately do not follow redirects.
 
 To trust the local development HTTPS certificate:
-\`dotnet dev-certs https --trust\`
+`dotnet dev-certs https --trust`
 
 ## Database migrations (important for login)
 
-Part 3 added \`ProfileImageUrl\` to Users and \`BannerImageUrl\` to Events. If your existing database lacks these columns, registration might detect duplicate emails while login fails when the API loads a full user record.
+Part 3 added `ProfileImageUrl` to Users and `BannerImageUrl` to Events. If your existing database lacks these columns, registration might detect duplicate emails while login fails when the API loads a full user record.
 
-For local **Development** API launches, \`RaceDay.Api/appsettings.Development.json\` enables \`RaceDay:AutoMigrate\`, so EF Core applies pending migrations when the API starts. Automatic migrations are opt-in outside this environment. If you use a pre-existing database created entirely by a handwritten SQL script rather than EF migrations, reconcile the EF migration history before enabling automatic migrations.
+For local **Development** API launches, `RaceDay.Api/appsettings.Development.json` enables `RaceDay:AutoMigrate`, so EF Core applies pending migrations when the API starts. Automatic migrations are opt-in outside this environment. If you use a pre-existing database created entirely by a handwritten SQL script rather than EF migrations, reconcile the EF migration history before enabling automatic migrations.
 
 Manual alternative in a terminal:
-\`dotnet ef database update --project RaceDay.Api --startup-project RaceDay.Api\`
+`dotnet ef database update --project RaceDay.Api --startup-project RaceDay.Api`
 
 Or in Visual Studio's Package Manager Console:
-\`Update-Database -Project RaceDay.Api -StartupProject RaceDay.Api\`
+`Update-Database -Project RaceDay.Api -StartupProject RaceDay.Api`
 
 If the API cannot start or SQL Server reports an invalid column, inspect the API Output window and verify the configured connection string and database migrations. Never share SQL passwords in issue reports.
 
@@ -45,27 +45,27 @@ If the API cannot start or SQL Server reports an invalid column, inspect the API
 
 ## Azure Blob Storage
 
-The API owns the Azure Storage connection and uploads; MVC never directly accesses Blob Storage. Private containers: \`banners\` and \`profiles\`. JPG/PNG/WebP up to 5 MB, with basic file-signature checks.
+The API owns the Azure Storage connection and uploads; MVC never directly accesses Blob Storage. Private containers: `banners` and `profiles`. JPG/PNG/WebP up to 5 MB, with basic file-signature checks.
 
 Configure the API secret (replace the placeholder locally, never commit it):
 
-\`dotnet user-secrets set "AzureStorage:ConnectionString" "<your-actual-storage-connection-string>" --project RaceDay.Api\`
+`dotnet user-secrets set "AzureStorage:ConnectionString" "<your-actual-storage-connection-string>" --project RaceDay.Api`
 
 If no Azure Storage connection is configured, core race features still work. Image uploads return a helpful HTTP 503 response rather than breaking the API startup.
 
 ## Docker Compose
 
-Copy \`.env.example\` to \`.env\` and set a strong SQL password. Set the Azure Storage connection string if you want image uploads. Run:
+Copy `.env.example` to `.env` and set a strong SQL password. Set the Azure Storage connection string if you want image uploads. Run:
 
-\`docker compose up --build -d\`
+`docker compose up --build -d`
 
-Open the MVC site at http://localhost:8080 and API at http://localhost:8081. The API service uses Docker-internal \`http://api:8080/\`. Compose enables automatic EF Core migrations on the SQL container. Production deployment should use a controlled migration process, persistent session store and Data Protection keys.
+Open the MVC site at http://localhost:8080 and API at http://localhost:8081. The API service uses Docker-internal `http://api:8080/`. Compose enables automatic EF Core migrations on the SQL container. Production deployment should use a controlled migration process, persistent session store and Data Protection keys.
 
 ## Debugging MVC/API requests
 
-\`RaceDay.MVC/Services/RaceDayApiClient.cs\` logs the request method, route and API status code without logging passwords or session cookies. Failed JSON/redirect responses show HTTP status and a short preview rather than "The API returned an unexpected response."
+`RaceDay.MVC/Services/RaceDayApiClient.cs` logs the request method, route and API status code without logging passwords or session cookies. Failed JSON/redirect responses show HTTP status and a short preview rather than "The API returned an unexpected response."
 
-For example, **405 Method Not Allowed** usually means the wrong API server or endpoint; **307 Redirect** indicates an HTTP/HTTPS mismatch; **500** may indicate a missing migration or unavailable database; **401** indicates credentials or an expired session. Confirm \`/api/health\` and inspect the API Output window.
+For example, **405 Method Not Allowed** usually means the wrong API server or endpoint; **307 Redirect** indicates an HTTP/HTTPS mismatch; **500** may indicate a missing migration or unavailable database; **401** indicates credentials or an expired session. Confirm `/api/health` and inspect the API Output window.
 
 ## Automated checks
 
