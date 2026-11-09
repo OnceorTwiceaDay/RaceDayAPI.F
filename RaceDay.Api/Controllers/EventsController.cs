@@ -111,6 +111,9 @@ public class EventsController : RaceDayControllerBase
         if (ev.OrganiserId != CurrentUserId)
             return StatusCode(StatusCodes.Status403Forbidden, new { message = "You do not own this event." });
 
+        if (await _db.Enrolments.AnyAsync(en => en.EventId == id))
+            return Conflict(new { message = "This event has enrolled participants and cannot be deleted. Cancel enrolments first." });
+
         _db.Events.Remove(ev);
         await _db.SaveChangesAsync();
         return NoContent();

@@ -29,6 +29,9 @@ public class MediaController : RaceDayControllerBase
         if (ev.OrganiserId != CurrentUserId) return Forbid();
         if (!BlobImageStore.IsAccepted(file) || !await HasAllowedSignature(file, token))
             return BadRequest(new { message = "Upload a JPG, PNG or WebP image of at most 5 MB." });
+        if (!_store.IsConfigured)
+            return StatusCode(StatusCodes.Status503ServiceUnavailable,
+                new { message = "Azure image storage is not configured. Ask the organiser to set AzureStorage:ConnectionString." });
         ev.BannerImageUrl = await _store.Upload(file, "banners", token);
         await _db.SaveChangesAsync(token);
         return Ok(new MediaUploadResponse { MediaUrl = ev.BannerImageUrl });
@@ -43,6 +46,9 @@ public class MediaController : RaceDayControllerBase
         if (user == null) return NotFound();
         if (!BlobImageStore.IsAccepted(file) || !await HasAllowedSignature(file, token))
             return BadRequest(new { message = "Upload a JPG, PNG or WebP image of at most 5 MB." });
+        if (!_store.IsConfigured)
+            return StatusCode(StatusCodes.Status503ServiceUnavailable,
+                new { message = "Azure image storage is not configured. Set AzureStorage:ConnectionString." });
         user.ProfileImageUrl = await _store.Upload(file, "profiles", token);
         await _db.SaveChangesAsync(token);
         return Ok(new MediaUploadResponse { MediaUrl = user.ProfileImageUrl });
@@ -60,6 +66,9 @@ public class MediaController : RaceDayControllerBase
             ? await _db.Events.AnyAsync(e => e.BannerImageUrl == path, token)
             : await _db.Users.AnyAsync(u => u.ProfileImageUrl == path, token);
         if (!linked) return NotFound();
+        if (!_store.IsConfigured)
+            return StatusCode(StatusCodes.Status503ServiceUnavailable,
+                new { message = "Azure image storage is not configured." });
         var media = await _store.Download(kind, name, token);
         return media == null ? NotFound() : File(media.Value.Stream, media.Value.ContentType);
     }

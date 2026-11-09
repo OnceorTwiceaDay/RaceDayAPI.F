@@ -58,8 +58,11 @@ if (builder.Configuration.GetValue<bool>("RaceDay:AutoMigrate"))
         try
         {
             using var scope = app.Services.CreateScope();
-            await scope.ServiceProvider.GetRequiredService<RaceDayDbContext>()
-                .Database.MigrateAsync();
+            var database = scope.ServiceProvider.GetRequiredService<RaceDayDbContext>().Database;
+            // In-memory test databases do not support relational migrations.
+            if (database.IsRelational())
+                await database.MigrateAsync();
+            app.Logger.LogInformation("RaceDay database schema is ready.");
             break;
         }
         catch (Microsoft.Data.SqlClient.SqlException) when (attempt < attempts)
@@ -82,6 +85,9 @@ app.UseHttpsRedirection();
 app.UseCors("AllowAll");
 app.UseSession();
 app.MapControllers();
+
+// Simple JSON connectivity check (does not expose credentials or database details).
+app.MapGet("/api/health", () => Results.Ok(new { status = "ok", service = "RaceDay.Api" }));
 
 // Helpful root endpoint so navigating to the application's base URL in a
 // browser shows something useful. In Development redirect to Swagger UI,

@@ -1,95 +1,175 @@
 using System.Net;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
 using Microsoft.Net.Http.Headers;
 
 namespace RaceDay.MVC.Services;
 
+/// <summary>
+/// Server-to-server API client. API cookies are stored in the CURRENT VISITOR'S
+/// MVC session, never in a shared HttpClient CookieContainer.
+/// </summary>
 public sealed class RaceDayApiClient
 {
     private readonly HttpClient _http;
     private readonly IHttpContextAccessor _accessor;
+    private readonly ILogger<RaceDayApiClient> _logger;
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
-    public RaceDayApiClient(HttpClient http, IHttpContextAccessor accessor)
+
+    public RaceDayApiClient(HttpClient http, IHttpContextAccessor accessor, ILogger<RaceDayApiClient> logger)
     {
         _http = http;
         _accessor = accessor;
+        _logger = logger;
     }
 
     private ISession Session => _accessor.HttpContext?.Session
-        ?? throw new InvalidOperationException("No active MVC request session.");
+        ?? throw new InvalidOperationException("An MVC request session is required.");
 
-    public async Task<ApiReply<T>> Get<T>(string path) => await Send<T>(HttpMethod.Get, path);
-    public async Task<ApiReply<T>> Post<T>(string path, object? data) =>
-        await Send<T>(HttpMethod.Post, path, data == null ? null : JsonContent.Create(data));
-    public async Task<ApiReply<T>> Put<T>(string path, object data) =>
-        await Send<T>(HttpMethod.Put, path, JsonContent.Create(data));
-    public async Task<ApiReply<T>> Delete<T>(string path) => await Send<T>(HttpMethod.Delete, path);
+    public Task<ApiReply<T>> Get<T>(string path) => Send<T>(HttpMethod.Get, path);
+    public Task<ApiReply<T>> Post<T>(string path, object? data) =>
+        Send<T>(HttpMethod.Post, path, data == null ? null : JsonContent.Create(data));
+    public Task<ApiReply<T>> Put<T>(string path, object data) =>
+        Send<T>(HttpMethod.Put, path, JsonContent.Create(data));
+    public Task<ApiReply<T>> Delete<T>(string path) => Send<T>(HttpMethod.Delete, path);
 
     public async Task<ApiReply<T>> Upload<T>(string path, IFormFile file)
     {
-        using var body = new MultipartFormDataContent();
+        using var multipart = new MultipartFormDataContent();
         await using var stream = file.OpenReadStream();
-        var part = new StreamContent(stream);
+        using var part = new StreamContent(stream);
         part.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(file.ContentType);
-        body.Add(part, "file", file.FileName);
-        return await Send<T>(HttpMethod.Post, path, body);
+        multipart.Add(part, "file", Path.GetFileName(file.FileName));
+        return await Send<T>(HttpMethod.Post, path, multipart);
     }
 
     public async Task<(byte[]? Data, string? ContentType)> GetMedia(string path)
     {
-        using var req = new HttpRequestMessage(HttpMethod.Get, path);
-        using var response = await _http.SendAsync(req);
-        if (!response.IsSuccessStatusCode) return (null, null);
-        var bytes = await response.Content.ReadAsByteArrayAsync();
-        return (bytes, response.Content.Headers.ContentType?.MediaType ?? "application/octet-stream");
+        try
+        {
+            using var req = new HttpRequestMessage(HttpMethod.Get, path);
+            using var response = await _http.SendAsync(req);
+            if (!response.IsSuccessStatusCode) return (null, null);
+            return (await response.Content.ReadAsByteArrayAsync(),
+                response.Content.Headers.ContentType?.MediaType ?? "application/octet-stream");
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogWarning(ex, "API media request failed for {Path}", path);
+            return (null, null);
+        }
     }
 
-    private async Task<ApiReply<T>> Send<T>(HttpMethod method, string path, HttpContent? body = null)
+    private async Task<ApiReply<T>> Send<T>(HttpMethod method, string path, HttpContent? content = null)
     {
         try
         {
-            using var request = new HttpRequestMessage(method, path) { Content = body };
+            using var request = new HttpRequestMessage(method, path) { Content = content };
+            request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
             var cookie = Session.GetString("ApiCookie");
-            if (!string.IsNullOrEmpty(cookie)) request.Headers.TryAddWithoutValidation(HeaderNames.Cookie, cookie);
+            if (!string.IsNullOrWhiteSpace(cookie))
+                request.Headers.TryAddWithoutValidation(HeaderNames.Cookie, cookie);
+
             using var response = await _http.SendAsync(request);
-            if (path == "api/auth/login" && response.IsSuccessStatusCode)
+            var raw = await response.Content.ReadAsStringAsync();
+            var status = response.StatusCode;
+            _logger.LogInformation("RaceDay API {Method} {Path}: HTTP {Status}",
+                method.Method, path, (int)status);
+
+            if ((int)status is >= 300 and < 400)
             {
-                var raw = response.Headers.TryGetValues(HeaderNames.SetCookie, out var cookies)
-                    ? cookies.FirstOrDefault(c => c.StartsWith("RaceDay.Session=", StringComparison.Ordinal))
-                    : null;
-                var sessionCookie = raw?.Split(';', 2)[0];
-                if (!string.IsNullOrEmpty(sessionCookie)) Session.SetString("ApiCookie", sessionCookie);
-                else return new ApiReply<T>(false, default, "API login did not return a session cookie.", response.StatusCode);
+                var destination = response.Headers.Location?.ToString() ?? "(no location)";
+                return Failure<T>(status, $"API redirected {method} {path} to {destination}. " +
+                    "Check RaceDayApi:BaseUrl and use the API's actual HTTPS listening address.");
             }
-            if (response.StatusCode == HttpStatusCode.Unauthorized && path != "api/auth/login")
-            {
+
+            if (status == HttpStatusCode.Unauthorized && path != "api/auth/login")
                 Session.Clear();
-            }
-            if (response.IsSuccessStatusCode)
+
+            if (!response.IsSuccessStatusCode)
+                return Failure<T>(status, FormatError(status, method, path, raw));
+
+            if (status == HttpStatusCode.NoContent || string.IsNullOrWhiteSpace(raw))
             {
-                if (response.StatusCode == HttpStatusCode.NoContent || response.Content.Headers.ContentLength == 0) return new ApiReply<T>(true, default, null, response.StatusCode);
-                var data = await response.Content.ReadFromJsonAsync<T>(Json);
-                return new ApiReply<T>(true, data, null, response.StatusCode);
+                if (path == "api/auth/login")
+                    return Failure<T>(status, "The API returned an empty login response.");
+                return new ApiReply<T>(true, default, null, status);
             }
-            var error = "The request could not be completed.";
-            using var doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
-            if (doc.RootElement.TryGetProperty("message", out var msg))
-                error = msg.GetString() ?? error;
-            return new ApiReply<T>(false, default, error, response.StatusCode);
+
+            T? data;
+            try
+            {
+                data = JsonSerializer.Deserialize<T>(raw, Json);
+            }
+            catch (JsonException)
+            {
+                return Failure<T>(status, $"API returned HTTP {(int)status} for {method} {path}, " +
+                    $"but the response was not JSON. Content type: " +
+                    $"{response.Content.Headers.ContentType?.MediaType ?? "(missing)"}. " +
+                    $"Response: {Preview(raw)}. Confirm the API URL and route.");
+            }
+
+            if (path == "api/auth/login")
+            {
+                if (data == null)
+                    return Failure<T>(status, "Login returned an empty JSON object.");
+
+                var sessionCookie = response.Headers.TryGetValues(HeaderNames.SetCookie, out var cookies)
+                    ? cookies.Select(c => c.Split(';', 2)[0])
+                        .FirstOrDefault(c => c.StartsWith("RaceDay.Session=", StringComparison.Ordinal))
+                    : null;
+
+                if (string.IsNullOrWhiteSpace(sessionCookie))
+                    return Failure<T>(status, "The API accepted the login but did not set RaceDay.Session. " +
+                        "Check that app.UseSession() is enabled in RaceDay.Api.");
+
+                Session.SetString("ApiCookie", sessionCookie);
+            }
+            return new ApiReply<T>(true, data, null, status);
         }
-        catch (HttpRequestException)
+        catch (HttpRequestException ex)
         {
-            return new ApiReply<T>(false, default, "Cannot connect to the RaceDay API. Ensure it is running.", HttpStatusCode.ServiceUnavailable);
+            _logger.LogWarning(ex, "RaceDay API is not reachable at {Url}", _http.BaseAddress);
+            return Failure<T>(HttpStatusCode.ServiceUnavailable,
+                $"Cannot connect to the RaceDay API at {_http.BaseAddress}. " +
+                "Check that the API is running, its HTTPS certificate is trusted, and the port matches.");
         }
         catch (TaskCanceledException)
         {
-            return new ApiReply<T>(false, default, "The API request timed out.", HttpStatusCode.GatewayTimeout);
+            return Failure<T>(HttpStatusCode.GatewayTimeout, "The API request timed out.");
         }
-        catch (JsonException)
+    }
+
+    private static ApiReply<T> Failure<T>(HttpStatusCode status, string message) =>
+        new(false, default, message, status);
+
+    private static string FormatError(HttpStatusCode status, HttpMethod method, string path, string raw)
+    {
+        var prefix = $"API returned HTTP {(int)status} ({status}) for {method} {path}.";
+        try
         {
-            return new ApiReply<T>(false, default, "The API returned an unexpected response.", HttpStatusCode.BadGateway);
+            using var doc = JsonDocument.Parse(raw);
+            if (doc.RootElement.ValueKind == JsonValueKind.Object)
+            {
+                foreach (var field in new[] { "message", "detail", "title" })
+                {
+                    if (doc.RootElement.TryGetProperty(field, out var value) &&
+                        value.ValueKind == JsonValueKind.String)
+                        return $"{prefix} {value.GetString()}";
+                }
+            }
         }
+        catch (JsonException) { /* A non-JSON error body is allowed. */ }
+
+        return string.IsNullOrWhiteSpace(raw) ? prefix :
+            $"{prefix} Response: {Preview(raw)}";
+    }
+
+    private static string Preview(string body)
+    {
+        var clean = body.Replace('\r', ' ').Replace('\n', ' ').Trim();
+        return clean.Length <= 160 ? clean : clean[..160] + "...";
     }
 }
 

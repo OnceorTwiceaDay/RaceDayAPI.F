@@ -61,6 +61,49 @@ public class RoutesController : RaceDayControllerBase
         return CreatedAtAction(nameof(GetForEvent), new { eventId }, ToDto(route));
     }
 
+
+    /// <summary>PUT /api/routes/{id} - only the owning Organiser can edit a route.</summary>
+    [HttpPut("api/routes/{id:int}")]
+    [RequireRole(Role.Organiser)]
+    public async Task<ActionResult<RouteDto>> Update(int id, CreateRouteRequest request)
+    {
+        var route = await _db.Routes.Include(r => r.Event)
+            .FirstOrDefaultAsync(r => r.RouteId == id);
+        if (route is null) return NotFound();
+        if (route.Event.OrganiserId != CurrentUserId)
+            return StatusCode(StatusCodes.Status403Forbidden,
+                new { message = "You do not own this event." });
+        if (string.IsNullOrWhiteSpace(request.RouteName) || request.DistanceKm <= 0 ||
+            string.IsNullOrWhiteSpace(request.StartPoint) || string.IsNullOrWhiteSpace(request.EndPoint))
+            return BadRequest(new { message = "Valid route name, distance, start and end points are required." });
+
+        route.RouteName = request.RouteName;
+        route.DistanceKm = request.DistanceKm;
+        route.StartPoint = request.StartPoint;
+        route.EndPoint = request.EndPoint;
+        route.ElevationGainM = request.ElevationGainM;
+        route.MapUrl = request.MapUrl;
+        await _db.SaveChangesAsync();
+        return Ok(ToDto(route));
+    }
+
+    /// <summary>DELETE /api/routes/{id} - only the owning Organiser can remove a route.</summary>
+    [HttpDelete("api/routes/{id:int}")]
+    [RequireRole(Role.Organiser)]
+    public async Task<IActionResult> Delete(int id)
+    {
+        var route = await _db.Routes.Include(r => r.Event)
+            .FirstOrDefaultAsync(r => r.RouteId == id);
+        if (route is null) return NotFound();
+        if (route.Event.OrganiserId != CurrentUserId)
+            return StatusCode(StatusCodes.Status403Forbidden,
+                new { message = "You do not own this event." });
+
+        _db.Routes.Remove(route);
+        await _db.SaveChangesAsync();
+        return NoContent();
+    }
+
     private static RouteDto ToDto(RaceRoute r) => new()
     {
         RouteId = r.RouteId,
