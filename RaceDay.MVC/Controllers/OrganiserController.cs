@@ -93,10 +93,11 @@ public class OrganiserController : Controller
         var entrants = await _api.Get<List<EnrolmentDto>>($"api/events/{id}/enrolments");
         var categories = await _api.Get<List<CategoryDto>>($"api/events/{id}/categories");
         var results = await _api.Get<List<ResultDto>>($"api/events/{id}/results");
+        var routes = await _api.Get<List<RouteDto>>($"api/events/{id}/routes");
         return View(new OrganiserEventViewModel
         {
             Event = ev.Data, Enrolments = entrants.Data ?? new(),
-            Categories = categories.Data ?? new(), Results = results.Data ?? new()
+            Categories = categories.Data ?? new(), Routes = routes.Data ?? new(), Results = results.Data ?? new()
         });
     }
 
@@ -144,4 +145,40 @@ public class OrganiserController : Controller
         TempData[reply.Success ? "Success" : "Error"] = reply.Success ? "Result saved." : reply.Error;
         return RedirectToAction(nameof(Manage), new { id = model.EventId });
     }
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> UpdateCategory(int eventId, int categoryId, UpdateCategoryRequest model)
+    {
+        var reply = await _api.Put<CategoryDto>($"api/categories/{categoryId}", model);
+        TempData[reply.Success ? "Success" : "Error"] =
+            reply.Success ? "Category updated." : reply.Error;
+        return RedirectToAction(nameof(Manage), new { id = eventId });
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> AddRoute(int eventId, CreateRouteRequest model)
+    {
+        var reply = await _api.Post<RouteDto>($"api/events/{eventId}/routes", model);
+        TempData[reply.Success ? "Success" : "Error"] =
+            reply.Success ? "Route added." : reply.Error;
+        return RedirectToAction(nameof(Manage), new { id = eventId });
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> UpdateRoute(int eventId, int routeId, CreateRouteRequest model)
+    {
+        var reply = await _api.Put<RouteDto>($"api/routes/{routeId}", model);
+        TempData[reply.Success ? "Success" : "Error"] =
+            reply.Success ? "Route updated." : reply.Error;
+        return RedirectToAction(nameof(Manage), new { id = eventId });
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteRoute(int eventId, int routeId)
+    {
+        var reply = await _api.Delete<object>($"api/routes/{routeId}");
+        TempData[reply.Success ? "Success" : "Error"] =
+            reply.Success ? "Route deleted." : reply.Error;
+        return RedirectToAction(nameof(Manage), new { id = eventId });
+    }
+
 }
