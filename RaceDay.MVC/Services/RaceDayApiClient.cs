@@ -86,9 +86,13 @@ public sealed class RaceDayApiClient
         {
             return new ApiReply<T>(false, default, "The API request timed out.", HttpStatusCode.GatewayTimeout);
         }
-        catch (JsonException)
+        catch (JsonException ex)
         {
-            return new ApiReply<T>(false, default, "The API returned an unexpected response.", HttpStatusCode.BadGateway);
+            return new ApiReply<T>(
+                false,
+                default,
+                $"API response was not valid JSON: {ex.Message}",
+                HttpStatusCode.BadGateway);
         }
     }
 }

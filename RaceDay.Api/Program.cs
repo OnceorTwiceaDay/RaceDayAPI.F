@@ -33,7 +33,7 @@ builder.Services.AddSwaggerGen(options =>
     {
         Title = "RaceDay API",
         Version = "v1",
-        Description = "RESTful API for the RaceDay event management system (PROG6212 PoE Part 2)."
+        Description = "RESTful API for the RaceDay event management system (PROG6212)."
     });
     options.EnableAnnotations();
     var xmlFile = $"{typeof(Program).Assembly.GetName().Name}.xml";
