@@ -40,7 +40,11 @@ public class ProfileController : Controller
         if (image != null && image.Length > 0)
         {
             var upload = await _api.Upload<MediaUploadResponse>("api/users/me/photo", image);
-            if (!upload.Success) TempData["Error"] = upload.Error;
+            if (!upload.Success)
+            {
+                TempData["Error"] = "Profile details saved, but the image upload failed: " + upload.Error;
+                return RedirectToAction(nameof(Index));
+            }
         }
         TempData["Success"] = "Profile saved.";
         return RedirectToAction(nameof(Index));
