@@ -10,11 +10,11 @@ The new `RaceDay.MVC` .NET 8 project calls the existing `RaceDay.Api` over HTTP.
 
    `dotnet ef database update --project RaceDay.Api --startup-project RaceDay.Api`
 
-4. Start the API. Confirm its HTTP URL from `RaceDay.Api/Properties/launchSettings.json`. Example:
+4. Start the API. Confirm its HTTPS URL from `RaceDay.Api/Properties/launchSettings.json`. Example:
 
    `dotnet run --project RaceDay.Api`
 
-5. Set `RaceDayApi__BaseUrl` to the API's actual HTTP URL (default: `http://localhost:59671/`).
+5. Set `RaceDayApi__BaseUrl` to the API's actual HTTPS URL (default: `https://localhost:59670/`).
 6. Launch MVC:
 
    `dotnet run --project RaceDay.MVC --launch-profile http`
