@@ -1,4 +1,4 @@
-name: Part 2 Build and Test
+name: RaceDay API and MVC Build and Test
 
 on:
   push:
@@ -21,6 +21,9 @@ jobs:
 
       - name: Build solution
         run: dotnet build RaceDay.sln --configuration Release --no-restore
+
+      - name: Compile MVC project
+        run: dotnet build RaceDay.MVC/RaceDay.MVC.csproj --configuration Release --no-restore
 
       - name: Run unit tests
         run: dotnet test RaceDay.sln --configuration Release --no-build --verbosity normal
