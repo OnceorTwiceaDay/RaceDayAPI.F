@@ -49,6 +49,26 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+// Opt-in only for local Docker Compose: create/update schema after SQL Server becomes ready.
+if (builder.Configuration.GetValue<bool>("RaceDay:AutoMigrate"))
+{
+    const int attempts = 30;
+    for (var attempt = 1; attempt <= attempts; attempt++)
+    {
+        try
+        {
+            using var scope = app.Services.CreateScope();
+            await scope.ServiceProvider.GetRequiredService<RaceDayDbContext>()
+                .Database.MigrateAsync();
+            break;
+        }
+        catch (Microsoft.Data.SqlClient.SqlException) when (attempt < attempts)
+        {
+            await Task.Delay(TimeSpan.FromSeconds(2));
+        }
+    }
+}
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
