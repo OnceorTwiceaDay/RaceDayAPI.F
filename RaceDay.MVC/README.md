@@ -1,60 +1,72 @@
-# RaceDay Part 3: MVC Front End
+# RaceDay Part 3 — ASP.NET Core MVC
 
-The new `RaceDay.MVC` .NET 8 project calls the existing `RaceDay.Api` over HTTP. MVC does **not** reference EF Core or access SQL Server directly.
+The MVC front end uses the existing ASP.NET Core API for **all data operations**. It does not reference EF Core or connect to SQL Server directly. Each user gets their own MVC session, which securely holds their API session cookie.
 
-## Local setup
+## Visual Studio quick start
 
-1. Install .NET 8 SDK and SQL Server.
-2. Configure the existing API connection string with user secrets or environment variables.
-3. Apply migrations:
+1. Open **RaceDay.sln** in Visual Studio 2022 with .NET 8 installed.
+2. Configure a working \`ConnectionStrings:DefaultConnection\` for **RaceDay.Api** (the existing SQL Server / RaceDayDb). Do not commit database passwords.
+3. Right-click the solution → **Configure Startup Projects** → **Multiple startup projects**:
+   - RaceDay.Api: **Start**
+   - RaceDay.MVC: **Start**
+   - RaceDay.Contracts / tests: **None**
+4. Rebuild the solution, then press **F5**.
+5. Test the API JSON health endpoint at **https://localhost:59670/api/health** and Swagger at **https://localhost:59670/swagger**. The actual port can be different if you changed the API launch profile.
+6. Open the MVC website at **http://localhost:5050**.
 
-   `dotnet ef database update --project RaceDay.Api --startup-project RaceDay.Api`
+The default MVC API destination is \`https://localhost:59670/\`, matching the API's development launch profile. Override \`RaceDayApi:BaseUrl\` via environment configuration if your API port changes. Do **not** point it at the MVC port. An HTTP-to-HTTPS redirect is treated as an error because server-side API calls deliberately do not follow redirects.
 
-4. Start the API. Confirm its HTTPS URL from `RaceDay.Api/Properties/launchSettings.json`. Example:
+To trust the local development HTTPS certificate:
+\`dotnet dev-certs https --trust\`
 
-   `dotnet run --project RaceDay.Api`
+## Database migrations (important for login)
 
-5. Set `RaceDayApi__BaseUrl` to the API's actual HTTPS URL (default: `https://localhost:59670/`).
-6. Launch MVC:
+Part 3 added \`ProfileImageUrl\` to Users and \`BannerImageUrl\` to Events. If your existing database lacks these columns, registration might detect duplicate emails while login fails when the API loads a full user record.
 
-   `dotnet run --project RaceDay.MVC --launch-profile http`
+For local **Development** API launches, \`RaceDay.Api/appsettings.Development.json\` enables \`RaceDay:AutoMigrate\`, so EF Core applies pending migrations when the API starts. Automatic migrations are opt-in outside this environment. If you use a pre-existing database created entirely by a handwritten SQL script rather than EF migrations, reconcile the EF migration history before enabling automatic migrations.
 
-7. Open `http://localhost:5050`.
+Manual alternative in a terminal:
+\`dotnet ef database update --project RaceDay.Api --startup-project RaceDay.Api\`
+
+Or in Visual Studio's Package Manager Console:
+\`Update-Database -Project RaceDay.Api -StartupProject RaceDay.Api\`
+
+If the API cannot start or SQL Server reports an invalid column, inspect the API Output window and verify the configured connection string and database migrations. Never share SQL passwords in issue reports.
+
+## Features
+
+**Participants:** register/log in, search events by name/location/type, browse categories/routes, enrol in a category, cancel an enrolment, view status/payment field, view published finish times and positions, update profile and photo.
+
+**Organisers:** register/log in, dashboard with event and entrant totals, create/edit/delete events and upload event banners, create/edit/delete categories, create/edit/delete routes, view and change enrolment status, capture and correct results.
+
+**Public:** searchable event catalogue, event details and public leaderboard.
+
+**Current data limitations:** payment status is recorded but there is no integrated payment gateway. Published finisher totals in My Results count available "Finished" result records, not all event entrants. The existing Part 2 API allows self-selection of Organiser accounts, which is suitable for coursework but not production role governance.
+
+## Azure Blob Storage
+
+The API owns the Azure Storage connection and uploads; MVC never directly accesses Blob Storage. Private containers: \`banners\` and \`profiles\`. JPG/PNG/WebP up to 5 MB, with basic file-signature checks.
+
+Configure the API secret (replace the placeholder locally, never commit it):
+
+\`dotnet user-secrets set "AzureStorage:ConnectionString" "<your-actual-storage-connection-string>" --project RaceDay.Api\`
+
+If no Azure Storage connection is configured, core race features still work. Image uploads return a helpful HTTP 503 response rather than breaking the API startup.
 
 ## Docker Compose
 
-Copy `.env.example` to `.env` and replace the SQL Server password. Set `AZURE_STORAGE_CONNECTION_STRING` if uploading images. Run:
+Copy \`.env.example\` to \`.env\` and set a strong SQL password. Set the Azure Storage connection string if you want image uploads. Run:
 
-`docker compose up --build -d`
+\`docker compose up --build -d\`
 
-Docker Compose enables the API's opt-in startup migrations and retries while SQL Server becomes ready. For local development this makes startup a single command; do not enable automatic migrations for production without a controlled deployment plan. Browse `http://localhost:8080`; API lives at `http://localhost:8081`.
+Open the MVC site at http://localhost:8080 and API at http://localhost:8081. The API service uses Docker-internal \`http://api:8080/\`. Compose enables automatic EF Core migrations on the SQL container. Production deployment should use a controlled migration process, persistent session store and Data Protection keys.
 
-For manual migrations, install the EF CLI and point `ConnectionStrings__DefaultConnection` at your SQL Server. Avoid committing credentials.
+## Debugging MVC/API requests
 
-## Session integration
+\`RaceDay.MVC/Services/RaceDayApiClient.cs\` logs the request method, route and API status code without logging passwords or session cookies. Failed JSON/redirect responses show HTTP status and a short preview rather than "The API returned an unexpected response."
 
-API authentication uses the original Part 2 `RaceDay.Session` session cookie. MVC saves that API cookie separately inside each visitor's MVC session; server-to-server calls use `HttpClientHandler.UseCookies=false` and attach the current visitor's API cookie. Logout invalidates API and MVC sessions.
+For example, **405 Method Not Allowed** usually means the wrong API server or endpoint; **307 Redirect** indicates an HTTP/HTTPS mismatch; **500** may indicate a missing migration or unavailable database; **401** indicates credentials or an expired session. Confirm \`/api/health\` and inspect the API Output window.
 
-## Uploaded images
+## Automated checks
 
-The API receives images, validates basic headers, and stores image bytes in private Azure Blob containers `banners` and `profiles`. Set `AzureStorage__ConnectionString` via environment or user secrets. MVC sends multipart uploads to the API and proxies read requests; it has no Azure credential. Uploaded image URLs are API-relative paths stored in SQL Server. JPG, PNG and WebP up to 5 MB are supported. Image access is public through the API once linked to an event/profile.
-
-## Pages
-
-- Public home, sport/search filtering, event details, categories, routes and leaderboard.
-- Participant account, event enrolment, cancellation, enrolment history, personal results, profile/photo.
-- Organiser dashboard, event CRUD, event banner, category creation/removal, entrant status and result publishing.
-
-## Limitations / planned refinements
-
-- The Part 2 API allows users to register as organisers; production deployment should verify that role.
-- Session storage is in-memory, suitable only for a single local instance.
-- Routes are displayed but editing routes in MVC is not included yet.
-- Category edit UI is not included yet (API endpoint already exists).
-- Results do not yet show a reliable total-finishers denominator (e.g. 47th of 312).
-- Azure Blob credentials and SQL migrations are required for full operation; do not commit secrets.
-- This branch was authored through GitHub integration. Confirm compilation and unit tests in GitHub Actions before submission.
-
-## GitHub Actions
-
-The workflow `.github/workflows/raceday-ci.yml` restores and builds `RaceDay.sln` including MVC and runs the existing API tests.
+The GitHub Actions workflow restores/builds the solution and runs both API and MVC test projects. The MVC tests verify API redirects, JSON errors, per-visitor cookie forwarding, and a full MVC login-form → organiser-dashboard flow with an in-memory API simulation. They do not replace a browser test against your own SQL Server and Azure Storage account.
