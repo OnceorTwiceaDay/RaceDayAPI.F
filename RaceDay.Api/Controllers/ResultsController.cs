@@ -96,7 +96,6 @@ public class ResultsController : RaceDayControllerBase
         var results = await _db.Results
             .Include(r => r.Enrolment).ThenInclude(en => en.Event)
             .Include(r => r.Enrolment).ThenInclude(en => en.Category)
-            .Include(r => r.Enrolment).ThenInclude(en => en.Category)
             .Include(r => r.Enrolment).ThenInclude(en => en.Participant)
             .Where(r => r.Enrolment.EventId == eventId)
             .OrderBy(r => r.FinishPosition)
@@ -112,6 +111,7 @@ public class ResultsController : RaceDayControllerBase
     {
         var results = await _db.Results
             .Include(r => r.Enrolment).ThenInclude(en => en.Event)
+            .Include(r => r.Enrolment).ThenInclude(en => en.Category)
             .Include(r => r.Enrolment).ThenInclude(en => en.Participant)
             .Where(r => r.Enrolment.ParticipantId == CurrentUserId)
             .ToListAsync();
@@ -123,6 +123,7 @@ public class ResultsController : RaceDayControllerBase
     {
         var result = await _db.Results
             .Include(r => r.Enrolment).ThenInclude(en => en.Event)
+            .Include(r => r.Enrolment).ThenInclude(en => en.Category)
             .Include(r => r.Enrolment).ThenInclude(en => en.Participant)
             .FirstAsync(r => r.ResultId == resultId);
 
