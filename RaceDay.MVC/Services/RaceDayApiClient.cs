@@ -39,7 +39,7 @@ public sealed class RaceDayApiClient
         using var multipart = new MultipartFormDataContent();
         await using var stream = file.OpenReadStream();
         using var part = new StreamContent(stream);
-        part.Headers.ContentType = new MediaTypeHeaderValue(file.ContentType);
+        part.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(file.ContentType);
         multipart.Add(part, "file", Path.GetFileName(file.FileName));
         return await Send<T>(HttpMethod.Post, path, multipart);
     }
