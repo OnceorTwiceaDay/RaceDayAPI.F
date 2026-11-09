@@ -86,6 +86,9 @@ app.UseCors("AllowAll");
 app.UseSession();
 app.MapControllers();
 
+// Simple JSON connectivity check (does not expose credentials or database details).
+app.MapGet("/api/health", () => Results.Ok(new { status = "ok", service = "RaceDay.Api" }));
+
 // Helpful root endpoint so navigating to the application's base URL in a
 // browser shows something useful. In Development redirect to Swagger UI,
 // otherwise return a simple text response.
