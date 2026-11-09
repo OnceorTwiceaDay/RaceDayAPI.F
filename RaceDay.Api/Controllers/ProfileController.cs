@@ -25,7 +25,7 @@ public class ProfileController : RaceDayControllerBase
         if (user is null) return NotFound();
 
         return Ok(ToDto(user.UserId, user.FullName, user.Email, user.Role.ToString(),
-                         user.PhoneNumber, user.DateOfBirth, user.RegisteredDate));
+                         user.PhoneNumber, user.DateOfBirth, user.RegisteredDate, user.ProfileImageUrl));
     }
 
     /// <summary>PUT /api/users/me - a user may only ever update their own profile (never by UserId).</summary>
@@ -52,7 +52,7 @@ public class ProfileController : RaceDayControllerBase
     }
 
     private static ProfileDto ToDto(int id, string name, string email, string role,
-        string? phone, DateOnly? dob, DateTime registered) => new()
+        string? phone, DateOnly? dob, DateTime registered, string? imageUrl) => new()
     {
         UserId = id,
         FullName = name,
@@ -60,6 +60,7 @@ public class ProfileController : RaceDayControllerBase
         Role = role,
         PhoneNumber = phone,
         DateOfBirth = dob,
-        RegisteredDate = registered
+        RegisteredDate = registered,
+        ProfileImageUrl = imageUrl
     };
 }
