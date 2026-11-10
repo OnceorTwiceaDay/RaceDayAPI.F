@@ -11,6 +11,8 @@ public sealed class BlobImageStore
     {
         [".jpg"] = "image/jpeg", [".png"] = "image/png", [".webp"] = "image/webp"
     };
+    // The same Blob SDK works with local Azurite and real Azure Storage.
+    // Only the connection string changes between environments.
     public BlobImageStore(IConfiguration config)
     {
         var connection = config["AzureStorage:ConnectionString"];
@@ -43,7 +45,7 @@ public sealed class BlobImageStore
 
     public async Task<(Stream Stream, string ContentType)?> Download(string containerName, string name, CancellationToken token)
     {
-        var blob = _client.GetBlobContainerClient(containerName).GetBlobClient(name);
+        var blob = (_client ?? throw new InvalidOperationException("Blob Storage is not configured.")).GetBlobContainerClient(containerName).GetBlobClient(name);
         if (!await blob.ExistsAsync(token)) return null;
         var result = await blob.DownloadStreamingAsync(cancellationToken: token);
         return (result.Value.Content, result.Value.Details.ContentType ?? "application/octet-stream");
