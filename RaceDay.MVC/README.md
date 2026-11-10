@@ -19,6 +19,22 @@ The default MVC API destination is `https://localhost:59670/`, matching the API'
 To trust the local development HTTPS certificate:
 `dotnet dev-certs https --trust`
 
+## Database migrations and legacy SQL schema repair
+
+If MVC displays `API returned HTTP 500 ... Invalid column name 'DistanceKm'`
+during `GET api/events`, the old Part 1 SQL script likely created
+`Events` without the required `DistanceKm` column. The Part 3 EF model
+also expects nullable `BannerImageUrl` and `ProfileImageUrl` columns.
+
+**Do not rerun `docs/RaceDay_Database.sql`** on existing data: it drops
+and re-creates tables. Back up your SQL Server database and run
+[`docs/RaceDay_ExistingDb_Part3_Repair.sql`](../docs/RaceDay_ExistingDb_Part3_Repair.sql)
+from SSMS against the same `RaceDayDb` instance used in the API connection
+string. The repair creates missing columns and fills new event headline
+distances from existing category distances. Check any event left at 0 km
+and correct it manually. Pulling code from GitHub cannot alter your local
+SQL Server. Do not manually fake EF migration history.
+
 ## Database migrations (important for login)
 
 Part 3 added `ProfileImageUrl` to Users and `BannerImageUrl` to Events. If your existing database lacks these columns, registration might detect duplicate emails while login fails when the API loads a full user record.

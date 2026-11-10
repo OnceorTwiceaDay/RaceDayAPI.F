@@ -2,8 +2,14 @@
    RaceDay Database Script
    PROG6212 PoE Part 1 - Section C
 
-   Run this entire script top-to-bottom in SSMS on a fresh SQL Server
-   instance. It creates its own database, so no manual setup is required.
+   CAUTION: THIS IS AN OLD PART 1 DEMO / SEED SCRIPT.
+   It DROPS and RE-CREATES tables and deletes any previous user data.
+   Do NOT run it to repair a database already used by RaceDay MVC/API.
+   If you see "Invalid column name 'DistanceKm'", run the safe
+   docs/RaceDay_ExistingDb_Part3_Repair.sql script instead in SSMS.
+
+   For a BRAND-NEW, disposable Part 1 demo database only:
+   run this script top-to-bottom in SSMS on a fresh SQL Server instance.
    ===================================================================== */
 
 -- ---------------------------------------------------------------------
