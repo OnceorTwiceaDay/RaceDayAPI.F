@@ -16,10 +16,8 @@ builder.Services.AddSession(options =>
 
 builder.Services.AddHttpClient<RaceDayApiClient>(client =>
 {
-    var apiUrl = builder.Configuration["RaceDayApi:BaseUrl"]
-        ?? "https://localhost:59670/";
-
-    client.BaseAddress = new Uri(apiUrl);
+    var url = builder.Configuration["RaceDayApi:BaseUrl"] ?? "http://localhost:59671/";
+    client.BaseAddress = new Uri(url.EndsWith('/') ? url : url + "/");
     client.Timeout = TimeSpan.FromSeconds(30);
 })
 .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
@@ -30,6 +28,7 @@ builder.Services.AddHttpClient<RaceDayApiClient>(client =>
 
 
 var app = builder.Build();
+app.Logger.LogInformation("RaceDay.MVC API base URL: {BaseUrl}", builder.Configuration["RaceDayApi:BaseUrl"] ?? "https://localhost:59670/");
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");

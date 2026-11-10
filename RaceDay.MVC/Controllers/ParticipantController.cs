@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using RaceDay.Contracts;
+using RaceDay.MVC.Models;
 using RaceDay.MVC.Services;
 
 namespace RaceDay.MVC.Controllers;
@@ -40,6 +41,13 @@ public class ParticipantController : Controller
     {
         var reply = await _api.Get<List<ResultDto>>("api/users/me/results");
         if (!reply.Success) TempData["Error"] = reply.Error;
-        return View(reply.Data ?? new());
+        var vm = new ParticipantResultsViewModel { Results = reply.Data ?? new() };
+        foreach (var eventId in vm.Results.Select(r => r.EventId).Distinct())
+        {
+            var leaderboard = await _api.Get<List<ResultDto>>($"api/events/{eventId}/results");
+            vm.RecordedFinishersByEvent[eventId] = leaderboard.Data?
+                .Count(r => r.Status == "Finished") ?? 0;
+        }
+        return View(vm);
     }
 }

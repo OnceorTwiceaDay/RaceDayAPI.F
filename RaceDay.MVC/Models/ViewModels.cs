@@ -30,6 +30,7 @@ public class OrganiserEventViewModel
     public EventDto Event { get; set; } = new();
     public List<EnrolmentDto> Enrolments { get; set; } = new();
     public List<CategoryDto> Categories { get; set; } = new();
+    public List<RouteDto> Routes { get; set; } = new();
     public List<ResultDto> Results { get; set; } = new();
 }
 
@@ -70,4 +71,10 @@ public class EventFormViewModel
         EventName = EventName, Description = Description, EventDate = EventDate,
         Location = Location, DistanceKm = DistanceKm, EventType = EventType
     };
+}
+
+public class ParticipantResultsViewModel
+{
+    public List<ResultDto> Results { get; set; } = new();
+    public Dictionary<int, int> RecordedFinishersByEvent { get; set; } = new();
 }
