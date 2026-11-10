@@ -43,23 +43,25 @@ If the API cannot start or SQL Server reports an invalid column, inspect the API
 
 **Current data limitations:** payment status is recorded but there is no integrated payment gateway. Published finisher totals in My Results count available "Finished" result records, not all event entrants. The existing Part 2 API allows self-selection of Organiser accounts, which is suitable for coursework but not production role governance.
 
-## Azure Blob Storage
+## Azure Blob Storage and Azurite (Part 3 notes, pages 40–50)
 
 The API owns the Azure Storage connection and uploads; MVC never directly accesses Blob Storage. Private containers: `banners` and `profiles`. JPG/PNG/WebP up to 5 MB, with basic file-signature checks.
 
-Configure the API secret (replace the placeholder locally, never commit it):
+During local Development, `RaceDay.Api/appsettings.Development.json` sets `AzureStorage:ConnectionString` to `UseDevelopmentStorage=true`. Start Azurite on `127.0.0.1:10000` first (via Visual Studio Connected Services, npm, or `docker run --rm -p 127.0.0.1:10000:10000 mcr.microsoft.com/azure-storage/azurite azurite-blob --blobHost 0.0.0.0`). The Blob SDK writes images to private `banners` and `profiles` containers; SQL Server stores the paths. Verify both uploading and display by refreshing MVC, and inspect the containers in Azure Storage Explorer.
+
+For cloud Azure Storage instead, configure the API secret (replace the placeholder locally, never commit it):
 
 `dotnet user-secrets set "AzureStorage:ConnectionString" "<your-actual-storage-connection-string>" --project RaceDay.Api`
 
-If no Azure Storage connection is configured, core race features still work. Image uploads return a helpful HTTP 503 response rather than breaking the API startup.
+If Azurite is not running or real Azure Storage is unavailable, core race features still work. Image operations return HTTP 503 with a useful error instead of a raw SDK exception.
 
 ## Docker Compose
 
-Copy `.env.example` to `.env` and set a strong SQL password. Set the Azure Storage connection string if you want image uploads. Run:
+Copy `.env.example` to `.env` and set a strong SQL password. The Docker stack now includes Azurite with a persistent blob volume and automatically connects API to `http://azurite:10000`. Leave the Azure Storage variable empty for Azurite, or set a real Azure cloud connection string if required. Run:
 
 `docker compose up --build -d`
 
-Open the MVC site at http://localhost:8080 and API at http://localhost:8081. The API service uses Docker-internal `http://api:8080/`. Compose enables automatic EF Core migrations on the SQL container. Production deployment should use a controlled migration process, persistent session store and Data Protection keys.
+Open MVC at http://localhost:8080, the API health check at http://localhost:8081/api/health, and Azurite at http://127.0.0.1:10000. The API service uses Docker-internal `http://api:8080/`. Compose enables automatic EF Core migrations on the SQL container. Production deployment should use a controlled migration process, persistent session store and Data Protection keys.
 
 ## Debugging MVC/API requests
 
@@ -70,3 +72,7 @@ For example, **405 Method Not Allowed** usually means the wrong API server or en
 ## Automated checks
 
 The GitHub Actions workflow restores/builds the solution and runs both API and MVC test projects. The MVC tests verify API redirects, JSON errors, per-visitor cookie forwarding, and a full MVC login-form → organiser-dashboard flow with an in-memory API simulation. They do not replace a browser test against your own SQL Server and Azure Storage account.
+
+## Lecturer's additional Part 3 class notes
+
+Read [the RaceDay-specific adaptation and full acceptance checklist](../docs/PROG6212_PART3_ADAPTED_GUIDE.md). The slides use a different Course Registration system with JWT/bearer tokens and Admin/Lecturer/Student. RaceDay intentionally retains its Part 2 session-cookie authentication with Organiser/Participant roles; do not paste JWT-specific sample code into it.
