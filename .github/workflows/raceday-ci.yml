@@ -16,6 +16,11 @@ jobs:
         with:
           dotnet-version: 8.0.x
 
+      - name: Validate Docker Compose settings
+        env:
+          MSSQL_SA_PASSWORD: "CI-OnlyStrongPassword123!"
+        run: docker compose config --quiet
+
       - name: Restore packages
         run: dotnet restore RaceDay.sln
 
@@ -24,6 +29,9 @@ jobs:
 
       - name: Compile MVC project
         run: dotnet build RaceDay.MVC/RaceDay.MVC.csproj --configuration Release --no-restore
+
+      - name: Build MVC Docker image
+        run: docker build -f RaceDay.MVC/Dockerfile -t raceday-mvc-ci .
 
       - name: Start local Azurite Blob emulator
         run: |
