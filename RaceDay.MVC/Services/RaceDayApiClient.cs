@@ -249,7 +249,8 @@ public sealed class RaceDayApiClient
                 return Failure<T>(
                     status,
                     $"API returned HTTP {(int)status} for {path}, " +
-                    "but the response was not valid JSON. " +
+                    "but the response was not JSON. " +
+                    $"Content type: {response.Content.Headers.ContentType?.MediaType ?? "(missing)"}. " +
                     $"Response: {Preview(raw)}");
             }
 
@@ -277,15 +278,12 @@ public sealed class RaceDayApiClient
                                 StringComparison.Ordinal));
                 }
 
-                // An existing session cookie may be reused
-                sessionCookie ??= Session.GetString("ApiCookie");
-
                 if (string.IsNullOrWhiteSpace(sessionCookie))
                 {
                     return Failure<T>(
                         status,
                         "The API accepted the login but did not " +
-                        "return a session cookie. Check UseSession().");
+                        "return RaceDay.Session. Check that UseSession() is enabled in the API.");
                 }
 
                 Session.SetString(
