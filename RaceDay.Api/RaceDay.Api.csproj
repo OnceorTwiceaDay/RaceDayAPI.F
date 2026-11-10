@@ -28,4 +28,9 @@
     <ProjectReference Include="..\RaceDay.Contracts\RaceDay.Contracts.csproj" />
   </ItemGroup>
 
+<ItemGroup>
+  <!-- Exclude unused Azure Connected Services helper -->
+  <Compile Remove="AzureClientFactoryBuilderExtensions.cs" />
+</ItemGroup>
+
 </Project>

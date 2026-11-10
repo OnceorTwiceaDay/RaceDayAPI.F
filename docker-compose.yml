@@ -15,7 +15,7 @@ services:
     image: mcr.microsoft.com/azure-storage/azurite
     command: azurite --location /data --blobHost 0.0.0.0 --queueHost 0.0.0.0 --tableHost 0.0.0.0
     ports:
-      - "127.0.0.1:10000:10000"
+      - "127.0.0.1:10010:10000"
     volumes:
       - azurite_data:/data
     healthcheck:

@@ -361,3 +361,9 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# Local Docker and Azure configuration
+.env
+RaceDay.Api/AzureClientFactoryBuilderExtensions.cs
+RaceDay.Api/Properties/serviceDependencies.json
+RaceDay.Api/Properties/serviceDependencies.local.json

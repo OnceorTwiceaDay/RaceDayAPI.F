@@ -3,6 +3,7 @@ using Microsoft.OpenApi.Models;
 using RaceDay.Api.Data;
 using RaceDay.Api.Services;
 
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Controllers
@@ -46,6 +47,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowAll", policy =>
         policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
 });
+
 
 var app = builder.Build();
 
