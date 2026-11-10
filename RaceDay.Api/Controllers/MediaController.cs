@@ -13,10 +13,13 @@ public class MediaController : RaceDayControllerBase
 {
     private readonly RaceDayDbContext _db;
     private readonly BlobImageStore _store;
-    public MediaController(RaceDayDbContext db, BlobImageStore store)
+    private readonly ILogger<MediaController> _logger;
+
+    public MediaController(RaceDayDbContext db, BlobImageStore store, ILogger<MediaController> logger)
     {
         _db = db;
         _store = store;
+        _logger = logger;
     }
 
     [HttpPost("api/events/{id:int}/banner")]
@@ -32,9 +35,23 @@ public class MediaController : RaceDayControllerBase
         if (!_store.IsConfigured)
             return StatusCode(StatusCodes.Status503ServiceUnavailable,
                 new { message = "Azure image storage is not configured. Ask the organiser to set AzureStorage:ConnectionString." });
-        ev.BannerImageUrl = await _store.Upload(file, "banners", token);
-        await _db.SaveChangesAsync(token);
-        return Ok(new MediaUploadResponse { MediaUrl = ev.BannerImageUrl });
+        try
+        {
+            var url = await _store.Upload(file, "banners", token);
+            ev.BannerImageUrl = url;
+            await _db.SaveChangesAsync(token);
+            return Ok(new MediaUploadResponse { MediaUrl = url });
+        }
+        catch (Azure.RequestFailedException ex)
+        {
+            _logger.LogWarning(ex, "Blob upload unavailable for event {EventId}", id);
+            return StorageUnavailable();
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogWarning(ex, "Blob upload connection failed for event {EventId}", id);
+            return StorageUnavailable();
+        }
     }
 
     [HttpPost("api/users/me/photo")]
@@ -49,9 +66,23 @@ public class MediaController : RaceDayControllerBase
         if (!_store.IsConfigured)
             return StatusCode(StatusCodes.Status503ServiceUnavailable,
                 new { message = "Azure image storage is not configured. Set AzureStorage:ConnectionString." });
-        user.ProfileImageUrl = await _store.Upload(file, "profiles", token);
-        await _db.SaveChangesAsync(token);
-        return Ok(new MediaUploadResponse { MediaUrl = user.ProfileImageUrl });
+        try
+        {
+            var url = await _store.Upload(file, "profiles", token);
+            user.ProfileImageUrl = url;
+            await _db.SaveChangesAsync(token);
+            return Ok(new MediaUploadResponse { MediaUrl = url });
+        }
+        catch (Azure.RequestFailedException ex)
+        {
+            _logger.LogWarning(ex, "Blob upload unavailable for profile");
+            return StorageUnavailable();
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogWarning(ex, "Blob upload connection failed for profile");
+            return StorageUnavailable();
+        }
     }
 
     [HttpGet("api/media/{kind}/{name}")]
@@ -69,9 +100,26 @@ public class MediaController : RaceDayControllerBase
         if (!_store.IsConfigured)
             return StatusCode(StatusCodes.Status503ServiceUnavailable,
                 new { message = "Azure image storage is not configured." });
-        var media = await _store.Download(kind, name, token);
-        return media == null ? NotFound() : File(media.Value.Stream, media.Value.ContentType);
+        try
+        {
+            var media = await _store.Download(kind, name, token);
+            return media == null ? NotFound() : File(media.Value.Stream, media.Value.ContentType);
+        }
+        catch (Azure.RequestFailedException ex)
+        {
+            _logger.LogWarning(ex, "Blob download unavailable for {Kind}", kind);
+            return StorageUnavailable();
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogWarning(ex, "Blob download connection failed for {Kind}", kind);
+            return StorageUnavailable();
+        }
     }
+
+    private ObjectResult StorageUnavailable() =>
+        StatusCode(StatusCodes.Status503ServiceUnavailable,
+            new { message = "Image storage is unavailable. Start Azurite for local development or configure a reachable Azure Storage account." });
 
     private static async Task<bool> HasAllowedSignature(IFormFile file, CancellationToken token)
     {
