@@ -283,7 +283,7 @@ public sealed class RaceDayApiClient
                     return Failure<T>(
                         status,
                         "The API accepted the login but did not " +
-                        "return a session cookie. Check UseSession().");
+                        "return RaceDay.Session. Check that UseSession() is enabled in the API.");
                 }
 
                 Session.SetString(
