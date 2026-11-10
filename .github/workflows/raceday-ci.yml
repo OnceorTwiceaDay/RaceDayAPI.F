@@ -25,5 +25,22 @@ jobs:
       - name: Compile MVC project
         run: dotnet build RaceDay.MVC/RaceDay.MVC.csproj --configuration Release --no-restore
 
-      - name: Run unit tests
+      - name: Start local Azurite Blob emulator
+        run: |
+          docker run -d --name raceday-azurite -p 127.0.0.1:10000:10000 \
+            mcr.microsoft.com/azure-storage/azurite \
+            azurite-blob --blobHost 0.0.0.0
+          for attempt in {1..30}; do
+            if curl -s -o /dev/null http://127.0.0.1:10000/; then
+              echo "Azurite Blob service is ready"
+              exit 0
+            fi
+            sleep 1
+          done
+          docker logs raceday-azurite
+          exit 1
+
+      - name: Run API and MVC tests (including Azurite round trips)
+        env:
+          RACEDAY_AZURITE_TESTS: "1"
         run: dotnet test RaceDay.sln --configuration Release --no-build --verbosity normal
